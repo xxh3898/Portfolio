@@ -6,7 +6,9 @@
 
 ## 👋 소개
 
-안녕하세요! 취미인 스피드 큐빙으로 단련한 **집요함과 체계적인 습관**을 개발에 적용하는 백엔드 개발자 **조치호**입니다.
+취미인 스피드 큐빙으로 수천 번 반복하며 단련한 **집요함**,
+직접 만든 11종의 템플릿으로 기획부터 배포까지 전 과정을 기록하는 **체계적인 습관**.
+이 두 가지를 개발에 그대로 적용하는 백엔드 개발자 **조치호**입니다.
 
 ---
 
@@ -28,8 +30,8 @@
 | :------------- | :--------------------------------------------------------------------------------- |
 | 📧 **Email**   | chiho3898@gmail.com                                                                |
 | 📞 **Phone**   | 010-9020-0511                                                                      |
-| � **Location** | 서울 관악구 신림동                                                                         |
-| �🐙 **GitHub** | [github.com/xxh3898](https://github.com/xxh3898)                                   |
+| 📍 **Location** | 서울 관악구 신림동                                                                         |
+| 🐙 **GitHub** | [github.com/xxh3898](https://github.com/xxh3898)                                   |
 | 📝 **Blog**    | [xxh3898.tistory.com](https://xxh3898.tistory.com)                                 |
 | 🗒️ **Notion** | [포트폴리오 노션](https://giddy-garment-d4d.notion.site/2d33702fcc05809b99dee56e64efff99) |
 
@@ -41,7 +43,7 @@
 | :-------- | :-------------------------------------- | :---------------- |
 | 🎓 **학력** | 세명대학교 스마트IT학부 (학점 3.0/4.5)              | 2020.03 ~ 2026.02 |
 | 🏫 **교육** | KH 정보교육원 — AWS 클라우드 기반 DevOps 개발자 양성 과정 | 2025.07 ~ 2026.03 |
-| 🏆 **수상** | KH정보교육원 프로젝트 우수상 (팀)                 | 2026.03           |
+| 🏆 **수상** | KH 정보교육원 프로젝트 우수상 (팀)                 | 2026.03           |
 
 **교육 과정 주요 내용**: Java/Spring 기반 백엔드, React/JS 프론트엔드, Oracle DB 활용, RESTful API 설계, AWS 배포 기초
 
@@ -65,32 +67,14 @@
 
 ## 🛠 기술 스택
 
-### Backend
-| 구분            | 기술                                                              |
-| :------------ | :-------------------------------------------------------------- |
-| **언어**        | Java 17                                                         |
-| **프레임워크**     | Spring Boot, Spring Framework, Spring Security, Spring Data JPA |
-| **ORM / SQL** | JPA (Hibernate), MyBatis                                        |
-| **데이터베이스**    | MySQL, Oracle, Redis, H2                                        |
-| **실시간 통신**    | WebSocket (STOMP), SSE (Server-Sent Events)                     |
-| **AI 연동**     | Spring AI (OpenAI, Google Gemini, Ollama), Google Cloud STT     |
-| **보안**        | JWT (Access/Refresh Token)                                      |
-| **API 문서화**   | Swagger (OpenAPI)                                               |
-| **빌드**        | Gradle                                                          |
-| **인프라**       | Docker, GitHub Actions, AWS (EC2, S3)                           |
-
-### Frontend
-| 구분 | 기술 |
-|:---|:---|
-| **언어 / 프레임워크** | JavaScript (ES6+), React 18 |
-| **상태 관리** | Zustand |
-| **스타일링** | Styled-components, HTML/CSS |
-| **통신** | Axios, StompJS |
-| **데이터 시각화** | Recharts, Lucide React |
-| **기타** | JSP, JSTL, Thymeleaf |
-
-### Tools
-Notion / Figma / Slack / IntelliJ / Postman / Git & GitHub
+| 분류 | 기술 스택 |
+| :--- | :--- |
+| **Backend** | ![Java 17](https://img.shields.io/badge/Java_17-ED8B00?style=flat) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat&logo=spring-boot&logoColor=white) ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=flat&logo=spring-security&logoColor=white) ![Spring Data JPA](https://img.shields.io/badge/Spring_Data_JPA-6DB33F?style=flat&logo=spring&logoColor=white) ![MyBatis](https://img.shields.io/badge/MyBatis-C70D2C?style=flat&logo=mybatis&logoColor=white) ![WebSocket](https://img.shields.io/badge/WebSocket-010101?style=flat&logo=socket.io&logoColor=white) ![JWT](https://img.shields.io/badge/JWT-000000?style=flat&logo=json-web-tokens&logoColor=white) ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=flat&logo=swagger&logoColor=black) ![Gradle](https://img.shields.io/badge/Gradle-02303A?style=flat&logo=gradle&logoColor=white) |
+| **Database** | ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=flat&logo=mysql&logoColor=white) ![Oracle](https://img.shields.io/badge/Oracle-F80000?style=flat&logo=oracle&logoColor=white) ![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat&logo=redis&logoColor=white) |
+| **Infra** | ![AWS](https://img.shields.io/badge/AWS-232F3E?style=flat&logo=amazon-aws&logoColor=white) ![EC2](https://img.shields.io/badge/EC2-FF9900?style=flat&logo=amazon-ec2&logoColor=white) ![S3](https://img.shields.io/badge/S3-569A31?style=flat&logo=amazon-s3&logoColor=white) ![RDS](https://img.shields.io/badge/RDS-527FFF?style=flat&logo=amazon-rds&logoColor=white) ![CloudFront](https://img.shields.io/badge/CloudFront-FF9900?style=flat&logo=amazon-aws&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat&logo=github-actions&logoColor=white) |
+| **Frontend** | ![React](https://img.shields.io/badge/React_18-20232A?style=flat&logo=react&logoColor=61DAFB) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black) ![Zustand](https://img.shields.io/badge/Zustand-443E38?style=flat&logo=react&logoColor=white) ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=flat&logo=axios&logoColor=white) ![Styled-components](https://img.shields.io/badge/Styled--components-DB7093?style=flat&logo=styled-components&logoColor=white) ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3&logoColor=white) |
+| **Tools** | ![Git](https://img.shields.io/badge/Git-F05032?style=flat&logo=git&logoColor=white) ![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white) ![IntelliJ IDEA](https://img.shields.io/badge/IntelliJ_IDEA-000000?style=flat&logo=intellij-idea&logoColor=white) ![Postman](https://img.shields.io/badge/Postman-FF6C37?style=flat&logo=postman&logoColor=white) ![Notion](https://img.shields.io/badge/Notion-000000?style=flat&logo=notion&logoColor=white) ![Figma](https://img.shields.io/badge/Figma-F24E1E?style=flat&logo=figma&logoColor=white) ![Slack](https://img.shields.io/badge/Slack-4A154B?style=flat&logo=slack&logoColor=white) |
+| **Experience** | ![JSP](https://img.shields.io/badge/JSP-007396?style=flat&logo=java&logoColor=white) ![JSTL](https://img.shields.io/badge/JSTL-007396?style=flat&logo=java&logoColor=white) ![Thymeleaf](https://img.shields.io/badge/Thymeleaf-005F0F?style=flat&logo=thymeleaf&logoColor=white) ![jQuery](https://img.shields.io/badge/jQuery-0769AD?style=flat&logo=jquery&logoColor=white) ![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?style=flat&logo=bootstrap&logoColor=white) |
 
 ---
 
@@ -98,7 +82,7 @@ Notion / Figma / Slack / IntelliJ / Postman / Git & GitHub
 
 ---
 
-### 🟦 CalmDesk (칼름데스크)
+### 🟦 CalmDesk
 > **팀 프로젝트** · 6인 Full Stack 팀 (Code808) · 이슈 관리자 담당
 
 **대규모 실시간 통신 및 상태 관리 최적화를 적용한 단일 기업용 B2B HR·웰빙 SaaS 통합 관리 플랫폼**
@@ -107,13 +91,14 @@ Notion / Figma / Slack / IntelliJ / Postman / Git & GitHub
 
 - 📅 **개발 기간**: 2026.01.06 ~ 2026.02.27 (약 8주)
 - 🔗 **GitHub**: [Code808/CalmDesk](https://github.com/Team-Code808)
+- 📖 **README**: [프로젝트 상세 리드미](https://github.com/Team-Code808#readme)
 - 📄 **API 명세서**: [api-spec.html](./api-spec.html) (Swagger/OpenAPI 기반 직접 작성을 통한 문서화 역량 증명)
 
 #### 🔧 본인 구현 주요 기능
 
 | 기능 | 설명 |
 |:---|:---|
-| � **실시간 채팅** | WebSocket(STOMP) 기반 1:1 / 그룹 채팅 구현, 메시지 수정·삭제·읽음 처리 및 채팅방 목록·이력 관리 |
+| 💬 **실시간 채팅** | WebSocket(STOMP) 기반 1:1 / 그룹 채팅 구현, 메시지 수정·삭제·읽음 처리 및 채팅방 목록·이력 관리 |
 | 🏠 **직원 대시보드** | 개인 업무 통계·정서 지수 요약 데이터 조회 및 실시간 현황 표시 화면 구현 |
 | 🕐 **출퇴근 로직** | 출근·퇴근 체크 및 기분(Emotion) 기록, 업무중·회의중·외출중 등 근무 상태 변경 API 구현 |
 
@@ -140,7 +125,7 @@ Notion / Figma / Slack / IntelliJ / Postman / Git & GitHub
 - **결과**: **쿼리 호출 횟수를 150개에서 3개로 단축**하고, **응답 속도를 25s ➡️ 0.9s로 대폭 개선**하여 DB 부하를 원천 차단함.
 
 #### 🛠 기술 스택
-`Java 17` `Spring Boot 3.x` `Spring AI` `Spring Security` `Spring Data JPA` `MySQL` `Redis` `WebSocket (STOMP)` `SSE` `OpenAI` `Google Cloud STT` `React 18` `Zustand` `Docker` `GitHub Actions`
+`Java 17` `Spring Boot 3.4.5` `Spring AI` `Spring Security` `Spring Data JPA` `MySQL` `Redis` `WebSocket (STOMP)` `SSE` `OpenAI` `Google Cloud STT` `React 18` `Zustand` `Docker` `GitHub Actions`
 
 ---
 
@@ -152,7 +137,8 @@ Notion / Figma / Slack / IntelliJ / Postman / Git & GitHub
 예약, 진료, 근태 관리 등 병원 운영의 전 영역을 디지털화하였으며, DB 리드로서 데이터 무결성과 성능 최적화에 집중함.
 
 - 📅 **개발 기간**: 2025.10.23 ~ 2025.11.19 (약 4주)
-- - 🔗 **GitHub**: [W3C](https://github.com/Team-W3C/W3C-Project)
+- 🔗 **GitHub**: [W3C](https://github.com/Team-W3C/W3C-Project)
+- 📖 **README**: [프로젝트 상세 리드미](https://github.com/Team-W3C/W3C-Project#readme)
 
 #### 🔧 본인 구현 주요 기능 및 기여
 
@@ -187,6 +173,7 @@ Notion / Figma / Slack / IntelliJ / Postman / Git & GitHub
 
 - 📅 **개발 기간**: 2025.10.02 ~ 2025.10.19 (약 3주)
 - 🔗 **GitHub**: [github.com/xxh3898/cubing-hub](https://github.com/xxh3898/cubing-hub)
+- 📖 **README**: [프로젝트 상세 리드미](https://github.com/xxh3898/cubing-hub#readme)
 - 📝 **개발 회고**: [Tistory 블로그](https://xxh3898.tistory.com/entry/React-Cube-Project)
 
 #### 🔧 구현 기능 및 기술적 도전
