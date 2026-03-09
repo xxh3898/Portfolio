@@ -166,7 +166,6 @@
             box-shadow: var(--shadow-lg);
         }
 
-        .hero-right {}
 
         .hero-name {
             font-size: 2.4rem;
@@ -267,7 +266,6 @@
             gap: 24px;
         }
 
-        .skill-col {}
 
         .skill-col-title {
             font-size: .8rem;
@@ -888,8 +886,8 @@
                     </div>
                     <div class="project-meta">2026.01.06 - 2026.02.27 &nbsp;·&nbsp; 6인 Full Stack · Code808</div>
                     <p class="project-desc">
-                        콜센터 상담원의 감정 노동과 정신적 부담을 관리·보호하는 <strong>AI 기반 HR·웰빙 B2B SaaS 플랫폼</strong>.<br>
-                        WebSocket·SSE 실시간 통신과 멀티테넌시 구조, 포인트 보상 시스템을 통합한 구독형 서비스.
+                        대규모 실시간 통신 및 상태 관리 최적화를 적용한 <strong>단일 기업용 B2B HR·웰빙 SaaS 통합 관리 플랫폼</strong>.<br>
+                        다중 접속 환경에서의 WebSocket·SSE 기반 실시간 데이터 스트리밍과 멀티테넌시 아키텍처를 통한 기업 간 완전한 데이터 격리를 구현한 클라우드 구독형 서비스입니다.
                     </p>
 
                     <!-- 프로젝트 스크린샷 -->
@@ -910,6 +908,24 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="project-label">아키텍처 및 주요 API</div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div>
+                                <strong>Architecture</strong><br>
+                                <code>React</code> ➡️ <code>Nginx</code> ➡️ <code>Spring Boot API</code> ➡️
+                                <code>Redis Cache</code> ➡️ <code>MySQL</code>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div>
+                                <strong>Key API</strong><br>
+                                <code>GET /api/employee/dashboard</code> (직원 대시보드 상태 및 통계 데이터 조회)<br>
+                                <code>PUB /pub/chat/message</code> (WebSocket 실시간 그룹/개인 채팅 메시지 발송)
+                            </div>
+                        </li>
+                    </ul>
 
                     <div class="project-label">본인 담당 기능</div>
                     <ul class="feature-list">
@@ -943,10 +959,14 @@
                     <ul class="feature-list">
                         <li class="feature-item">
                             <div>
-                                <strong>N+1 쿼리 최적화로 응답속도 25초 ➡️ 1초 정상화</strong><br>
-                                사내 대시보드 조회 시 직원별 휴가/스트레스/쿨다운 정보를 for문으로 조회해 150개의 쿼리가 터지는 N+1 문제를 발견했습니다.<br>
-                                이를 <code>WHERE IN</code> 절로 조회 후 <code>Map</code> 형태로 분리 매핑하여, <strong>쿼리를 3개로 단축하고
-                                    속도를 1초 이하로 정상화</strong>했습니다.
+                                <strong>N+1 문제 해결 및 서버 메모리 매핑 최적화 (응답속도 25초 ➡️ 0.9초)</strong><br>
+                                사내 대시보드 목록 조회 시 반복문(<code>for</code>) 내에서 직원별 휴가, 스트레스, 쿨다운 정보를 3개의 레포지토리로 각각 조회하여
+                                <strong>총 150개의 단건 쿼리가 연쇄적으로 발생하는 N+1 구조적 결함</strong>을 발견했습니다. 이로 인해 화면 로딩에 25초가
+                                소요되었습니다.<br>
+                                문제를 해결하기 위해 개별 조회 로직을 <code>WHERE IN</code> 절을 활용한 벌크 조회(Batch Fetch)로 변경하고, 이를 애플리케이션
+                                메모리 단에서 <code>Map</code> 자료구조를 이용해 매핑(<code>O(1)</code>)하는 방식으로 리팩토링했습니다. 결과적으로
+                                <strong>쿼리 호출 횟수를 150개에서 3개로 단축</strong>하고 <strong>응답 속도를 0.9초로 대폭 개선</strong>하여 DB 부하를
+                                원천 차단했습니다.
                             </div>
                         </li>
                         <li class="feature-item">
@@ -971,6 +991,9 @@
                     <div class="project-footer">
                         <a class="btn btn-primary" href="https://github.com/Team-Code808" target="_blank">
                             <i class="fa-brands fa-github"></i> GitHub
+                        </a>
+                        <a class="btn btn-outline" href="api-spec.html" target="_blank">
+                            <i class="fa-solid fa-file-lines"></i> API 명세서
                         </a>
                     </div>
                 </div>
@@ -1006,18 +1029,31 @@
                         </div>
                     </div>
 
+                    <div class="project-label">아키텍처</div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div>
+                                <strong>Architecture</strong><br>
+                                <code>JSP / JSTL</code> ➡️ <code>Spring Boot API</code> ➡️ <code>Oracle DB</code>
+                            </div>
+                        </li>
+                    </ul>
+
                     <div class="project-label">본인 담당 기능</div>
                     <ul class="feature-list">
                         <li class="feature-item">
                             <div>
-                                <strong>DB 모델링 (DB Lead)</strong><br>
-                                ERD 설계, FK·Check 제약조건 적용으로 데이터 무결성 확보
+                                <strong>DB 모델링 및 설계 (DB Lead)</strong><br>
+                                ERD 설계부터 <code>CONSTRAINT FK_...</code>,
+                                <code>CONSTRAINT CHK_STATUS CHECK (STATUS IN ('Y', 'N', 'R'))</code> 등 데이터베이스 단의 무결성 검증
+                                설정 주도
                             </div>
                         </li>
                         <li class="feature-item">
                             <div>
                                 <strong>쿼리 최적화</strong><br>
-                                Oracle LISTAGG·View 도입으로 N+1 해결, 성능 50% 향상 · SQL 복잡도 50% 감소
+                                Oracle <code>LISTAGG(name, ',') WITHIN GROUP (ORDER BY id)</code> 및 서브쿼리 활용으로 N+1 데이터 병합
+                                해결. View 도입으로 비즈니스별 복잡한 Join 성능 향상 및 SQL 복잡도 감소
                             </div>
                         </li>
                         <li class="feature-item">
@@ -1032,9 +1068,13 @@
                     <ul class="feature-list">
                         <li class="feature-item">
                             <div>
-                                <strong>개발 환경 통일 및 DB 병합 충돌 해결</strong><br>
-                                팀원마다 로컬 DB 제약조건이 달라 병합 시 잦은 충돌이 발생했습니다. UI 설계와 DB 제약조건 사이의 괴리감이 원인임을 빠르게 파악하고, 각자 필요한
-                                컬럼을 반영하여 <strong>DB 제약조건 변수명을 정리하고 더미 데이터를 표준화</strong>해 환경을 통일했습니다.
+                                <strong>데이터 무결성 확보 및 DB 병합 충돌 해결</strong><br>
+                                로컬 환경 개발 시 상태값 체크 조건(예: A 개발자는 '1, 2, 3', B 개발자는 'Y, N, R' 기반)이 통일되지 않아 DB 병합 시 지속적인 데이터
+                                충돌 및 정합성 오류가 발생했습니다.<br>
+                                DB 관리자로서 문제 원인이 단순 문서 부재가 아닌 <strong>명시적 제약조건 적용 누락</strong>에 있음을 파악하고, 상태 컬럼 타입을 통일한 뒤
+                                <code>CONSTRAINT CHK_STATUS CHECK (STATUS IN ('Y', 'N', 'R'))</code>와 같은 데이터베이스 단의 Check
+                                제약 조건을 강제했습니다. 이후 공통 더미 데이터를 배포하여 <strong>팀 전체의 개발 환경을 동기화하고 잠재적인 데이터 무결성 훼손을
+                                    차단</strong>했습니다.
                             </div>
                         </li>
                     </ul>
@@ -1061,8 +1101,8 @@
                     </div>
                     <div class="project-meta">2025.10.02 - 2025.10.19 약 3주</div>
                     <p class="project-desc">
-                        파편화된 큐브 기능(타이머·기록·알고리즘·커뮤니티)을 통합한 <strong>스피드큐빙 올인원 플랫폼</strong>.<br>
-                        실제 경기용 타이머 UX와 WCA 규격 스크램블, 3D 알고리즘 시각화 제공.
+                        파편화된 큐브 기능(타이머·기록·알고리즘·커뮤니티)을 통합한 <strong>스피드큐빙 올인원 비동기 웹 플랫폼</strong>.<br>
+                        수많은 큐브 이용자에게 필요한 기능성 도구들과 실시간 통계를 집약하여 통합 관리하며 타이머의 누적 오차와 렌더링 성능 최적화에 집중한 1인 기획/개발 프로젝트입니다.
                     </p>
 
                     <!-- 프로젝트 스크린샷 -->
@@ -1085,6 +1125,16 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="project-label">아키텍처</div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div>
+                                <strong>Architecture</strong><br>
+                                <code>React</code> ➡️ <code>Spring Boot API</code> ➡️ <code>MySQL</code>
+                            </div>
+                        </li>
+                    </ul>
 
                     <div class="project-label">구현 기능 및 기술적 도전</div>
                     <ul class="feature-list">

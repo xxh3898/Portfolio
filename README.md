@@ -100,12 +100,13 @@ Notion / Figma / Slack / IntelliJ / Postman / Git & GitHub
 ### 🟦 CalmDesk (칼름데스크)
 > **팀 프로젝트** · 6인 Full Stack 팀 (Code808) · 이슈 관리자 담당
 
-**콜센터 상담원의 감정 노동과 정신적 부담을 체계적으로 관리·보호하는 AI 기반 HR·웰빙 통합 관리 플랫폼**
+**대규모 실시간 통신 및 상태 관리 최적화를 적용한 단일 기업용 B2B HR·웰빙 SaaS 통합 관리 플랫폼**
 
-상담 중 발생하는 스트레스와 악성 민원 노출을 정량적으로 분석하여 상담원을 보호하며, WebSocket·SSE 기반 실시간 통신과 멀티테넌시 구조를 갖춘 **B2B SaaS** 형태의 구독형 서비스.
+다중 접속 환경에서의 WebSocket·SSE 기반 실시간 데이터 스트리밍과, 멀티테넌시 아키텍처를 통한 기업 간 완전한 데이터 격리를 구현한 클라우드 구독형 서비스입니다.
 
 - 📅 **개발 기간**: 2026.01.06 ~ 2026.02.27 (약 8주)
 - 🔗 **GitHub**: [Code808/CalmDesk](https://github.com/Team-Code808)
+- 📄 **API 명세서**: [api-spec.html](./api-spec.html) (Swagger/OpenAPI 기반 직접 작성을 통한 문서화 역량 증명)
 
 #### 🔧 본인 구현 주요 기능
 
@@ -124,6 +125,18 @@ Notion / Figma / Slack / IntelliJ / Postman / Git & GitHub
 | 🏢 **멀티테넌시** | 기업별 데이터 완전 분리, 독립적 조직 관리 구조 |
 | ✅ **근태/휴가 관리** | 연차·반차 신청, 관리자 승인·반려 처리 |
 | 🩺 **심리 상담** | 전문 상담사 매칭 및 이력 관리 |
+
+#### 🏗 아키텍처 및 주요 API
+- **Architecture**: `React` ➡️ `Nginx` ➡️ `Spring Boot API` ➡️ `Redis Cache` ➡️ `MySQL`
+- **Key API**:
+  - `GET /api/employee/dashboard` (직원 대시보드 상태 및 통계 데이터 조회)
+  - `PUB /pub/chat/message` (WebSocket 실시간 그룹/개인 채팅 메시지 발송)
+
+#### 🚨 주요 트러블슈팅
+**N+1 문제 해결 및 서버 메모리 매핑 최적화 (응답속도 25초 ➡️ 0.9초 개선)**
+- **상황**: 사내 대시보드 목록 조회 시 반복문(`for`) 내에서 직원별 휴가, 스트레스, 쿨다운 정보를 3개의 레포지토리로 각각 조회. 이로 인해 총 150개의 단건 쿼리가 연쇄적으로 발생하는 N+1 구조적 결함을 발견했으며, 화면 로딩에 25초가 소요됨.
+- **해결**: 개별 조회 로직을 `WHERE IN` 절을 활용한 벌크 조회(Batch Fetch)로 변경하고, 애플리케이션 메모리 단에서 `Map` 자료구조를 이용해 매핑(`O(1)`)하는 방식으로 리팩토링 진행.
+- **결과**: **쿼리 호출 횟수를 150개에서 3개로 단축**하고, **응답 속도를 25s ➡️ 0.9s로 대폭 개선**하여 DB 부하를 원천 차단함.
 
 #### 🛠 기술 스택
 `Java 17` `Spring Boot 3.x` `Spring AI` `Spring Security` `Spring Data JPA` `MySQL` `Redis` `WebSocket (STOMP)` `SSE` `OpenAI` `Google Cloud STT` `React 18` `Zustand` `Docker` `GitHub Actions`
@@ -144,10 +157,20 @@ Notion / Figma / Slack / IntelliJ / Postman / Git & GitHub
 
 | 기능 | 설명 |
 |:---|:---|
-| 🗄️ **DB 모델링 및 설계 (DB Lead)** | ERD 설계 및 외래키(FK), Check 제약조건을 적용하여 데이터 무결성 확보 |
-| ⚡ **쿼리 최적화** | Oracle `LISTAGG` 및 서브쿼리 활용으로 N+1 문제 해결, View 도입으로 복잡한 Join 성능 개선 (성능 50% 향상, SQL 복잡도 50% 감소) |
+| 🗄️ **DB 모델링 및 설계 (DB Lead)** | ERD 설계부터 `CONSTRAINT FK_...`, `CONSTRAINT CHK_STATUS CHECK (STATUS IN ('Y', 'N', 'R'))` 등 데이터베이스 단의 무결성 검증 설정 주도 |
+| ⚡ **쿼리 최적화** | Oracle `LISTAGG(name, ',') WITHIN GROUP (ORDER BY id)` 및 서브쿼리 활용으로 N+1 데이터 병합 해결. View 도입으로 비즈니스별 복잡한 Join 성능 향상 및 SQL 복잡도 50% 감소 |
 | 🕐 **근태 자동화 시스템** | `LocalTime` API를 활용한 출결 상태 자동 판별 로직 (정상/지각/조퇴/결근) 구현 |
 | 🤝 **협업 체계 구축** | Git 커밋 컨벤션 및 Issue 템플릿 도입으로 팀 내 코드 충돌 방지 및 리뷰 효율성 향상 |
+
+#### 🏗 아키텍처 및 데이터베이스 설계
+- **Architecture**: `JSP / JSTL` ➡️ `Spring Boot` ➡️ `Oracle DB`
+- **DB Modeling**: `CONSTRAINT FK_... FOREIGN KEY (...)`, `CONSTRAINT CHK_STATUS CHECK (STATUS IN ('Y','N','R'))` 등 명시적 제약조건 강제 및 데이터 정합성 보장
+
+#### 🚨 주요 트러블슈팅
+**데이터 무결성 확보 및 DB 병합 충돌 해결**
+- **상황**: 로컬 환경 개발 시 상태값 체크 조건(A 개발자는 '1, 2, 3', B 개발자는 'Y, N, R' 기반)이 통일되지 않아 DB 병합 시 지속적인 데이터 충돌 및 정합성 오류 발생.
+- **해결**: 문제 원인이 단순 문서 부재가 아닌 명시적 제약조건 적용 누락에 있음을 파악하고, 컬럼 타입을 통일한 뒤 DB 단에 `CHECK` 제약조건 강제로 데이터 표준화.
+- **결과**: 공통 더미 데이터를 재배포하여 팀 전체의 개발 환경 동기화 및 잠재적 데이터 무결성 훼손을 차단함.
 
 #### 🛠 기술 스택
 `Java` `Spring Boot` `MyBatis` `Oracle` `JSP` `JSTL`
@@ -157,9 +180,9 @@ Notion / Figma / Slack / IntelliJ / Postman / Git & GitHub
 ### 🟨 Cubing Hub (큐빙 허브)
 > **개인 프로젝트** · 1인 풀스택 개발
 
-**큐브 스피드솔빙을 위한 올인원 유틸리티 플랫폼**
+**파편화된 큐브 기능(타이머·기록·알고리즘·커뮤니티)을 통합한 스피드큐빙 올인원 비동기 웹 플랫폼**
 
-파편화된 큐브 관련 기능들(타이머, 기록 분석, 알고리즘 학습, 커뮤니티)을 하나의 웹 서비스로 통합. 정밀 타이머부터 3D 알고리즘 시각화, 노하우 공유 커뮤니티까지 큐버에게 필요한 모든 도구를 제공합니다.
+수많은 큐브 이용자에게 필요한 기능성 도구들과 실시간 통계를 집약하여 하나의 웹 서비스로 통합한 1인 개발 프로젝트입니다. 타이머의 누적 오차와 렌더링 성능 최적화에 집중했습니다.
 
 - 📅 **개발 기간**: 2025.10.02 ~ 2025.10.19 (약 3주)
 - 🔗 **GitHub**: [github.com/xxh3898/cubing-hub](https://github.com/xxh3898/cubing-hub)
@@ -176,6 +199,9 @@ Notion / Figma / Slack / IntelliJ / Postman / Git & GitHub
 | 📚 **3D 알고리즘 라이브러리** | VisualCube API 연동으로 큐브 회전을 3D 이미지로 시각화, LBL/CFOP 단계별 학습 지원 |
 | 🗣️ **커뮤니티 게시판** | 큐브 팁·추천 공유 자유 게시판 (CRUD 완벽 구현) |
 | 🔄 **상태 최적화** | Zustand 도입으로 빈번한 데이터 갱신 시 불필요한 리렌더링 최소화 |
+
+#### 🏗 아키텍처
+- **Architecture**: `React` ➡️ `Spring Boot API` ➡️ `MySQL`
 
 #### 🛠 기술 스택
 `Java 17` `Spring Boot 3.4` `Spring Data JPA` `H2 (Dev)` `MySQL (Prod)` `React (Vite)` `JavaScript (ES6+)` `Zustand` `Styled-Components` `VisualCube API`

@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalmDesk API 명세서</title>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-light.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            color: #24292f;
+        }
+
+        .header {
+            background-color: #1a1e23;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .back-btn {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .back-btn:hover {
+            color: white;
+            transform: translateX(-3px);
+        }
+
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 850px;
+            margin: 40px auto;
+            padding: 45px 50px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid #e1e4e8;
+        }
+
+        /* Custom Table Styling */
+        .markdown-body table {
+            display: table;
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .markdown-body table th {
+            background-color: #f6f8fa;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .markdown-body table td,
+        .markdown-body table th {
+            padding: 12px 16px;
+            border: 1px solid #d0d7de;
+        }
+
+        .markdown-body h1,
+        .markdown-body h2 {
+            border-bottom: 2px solid #eaecef;
+            padding-bottom: 0.3em;
+            margin-top: 2rem;
+        }
+
+        .markdown-body h1 {
+            font-size: 2em;
+            color: #0969da;
+            border-bottom: none;
+            border-left: 5px solid #0969da;
+            padding-left: 15px;
+        }
+
+        .markdown-body h2 {
+            font-size: 1.5em;
+        }
+
+        .markdown-body code {
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+            font-size: 0.85em;
+            background-color: rgba(175, 184, 193, 0.2);
+            padding: 0.2em 0.4em;
+            border-radius: 6px;
+        }
+
+        .markdown-body pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .markdown-body li {
+            margin-bottom: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .markdown-body {
+                margin: 20px;
+                padding: 20px 25px;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <h1>CalmDesk API Specification</h1>
+        <a href="index.html" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i> 포트폴리오로 돌아가기
+        </a>
+    </header>
+    <main class="markdown-body">
+        <h1>CalmDesk API 명세서 (API Specification)</h1>
+        <p>본 문서는 <strong>Code808 - CalmDesk</strong> 프로젝트의 모든 API 명세 정보를 담고 있습니다.
+            본 명세서는 Swagger(OpenAPI) 기반으로 작성되었으며, 실제 백엔드 컨트롤러 구조를 반영합니다.</p>
+        <h2>기본 정보</h2>
+        <ul>
+            <li><strong>Base URL</strong>: <code>http://calmdesk.cloud</code></li>
+            <li><strong>Content-Type</strong>: <code>application/json</code></li>
+            <li><strong>인증 방식</strong>: JWT (Header: Authorization: Bearer {Access_Token}, Cookie: refresh_token)</li>
+            <li><strong>Response Format</strong>: <a href="#common-response">공통 응답 규격</a>을 따릅니다.</li>
+        </ul>
+        <hr>
+        <h2>1. 인증 API (Auth)</h2>
+        <p>사용자 인증 및 권한 관리를 담당합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/auth/login</code></td>
+                    <td align="left"><strong>로그인</strong>: 이메일/비밀번호로 인증 후 토큰 발급</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/auth/signup</code></td>
+                    <td align="left"><strong>회원가입</strong>: 새로운 사용자 계정 생성</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/auth/logout</code></td>
+                    <td align="left"><strong>로그아웃</strong>: 현재 세션 및 토큰 무효화</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/auth/refresh</code></td>
+                    <td align="left"><strong>토큰 갱신</strong>: Refresh Token으로 새로운 Access Token 발급</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>2. 사용자 마이페이지 API (My Page)</h2>
+        <p>직원 본인의 프로필 및 자산을 관리합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/mypage/profile</code></td>
+                    <td align="left"><strong>프로필 조회</strong>: 본인의 기본 정보 조회</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PUT</code></td>
+                    <td align="left"><code>/api/mypage/profile</code></td>
+                    <td align="left"><strong>프로필 수정</strong>: 이름, 전화번호, 프로필 이미지 등 수정</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PUT</code></td>
+                    <td align="left"><code>/api/mypage/password</code></td>
+                    <td align="left"><strong>비밀번호 변경</strong>: 현재 비밀번호 확인 후 새 비밀번호 설정</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/mypage/stress</code></td>
+                    <td align="left"><strong>스트레스 요약 조회</strong>: 최근 AI 분석 결과 요약</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/mypage/points</code></td>
+                    <td align="left"><strong>포인트 내역 조회</strong>: 획득/사용 히스토리 (페이징)</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/mypage/coupons</code></td>
+                    <td align="left"><strong>기프티콘 목록 조회</strong>: 내가 보유한 쿠폰함 조회</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>3. 관리자용 사용자 관리 API (MyPage Admin)</h2>
+        <p>관리자가 사내 특정 멤버의 정보를 조회하거나 수정합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/mypage/{memberId}/profile</code></td>
+                    <td align="left">특정 멤버의 프로필 정보 조회</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PUT</code></td>
+                    <td align="left"><code>/api/admin/mypage/{memberId}/profile</code></td>
+                    <td align="left">특정 멤버의 프로필 정보 수정</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PUT</code></td>
+                    <td align="left"><code>/api/admin/mypage/{memberId}/password</code></td>
+                    <td align="left">특정 멤버의 비밀번호 강제 변경</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/mypage/{memberId}/points</code></td>
+                    <td align="left">특정 멤버의 포인트 내역 조회</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/mypage/{memberId}/coupons</code></td>
+                    <td align="left">특정 멤버의 보유 기프티콘 조회</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>4. 직원용 대시보드 API (Dashboard Employee)</h2>
+        <p>오늘의 출결 상태 및 근무 상태를 관리합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/employee/dashboard</code></td>
+                    <td align="left"><strong>대시보드 데이터 조회</strong>: 오늘의 출결, 미션 상태 등</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/employee/dashboard/status/clock-in</code></td>
+                    <td align="left"><strong>출근 처리</strong>: 출근 체크 및 현재 기분(Emotion) 기록</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/employee/dashboard/status/clock-out</code></td>
+                    <td align="left"><strong>퇴근 처리</strong>: 퇴근 체크 및 현재 기분(Emotion) 기록</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/employee/dashboard/status</code></td>
+                    <td align="left"><strong>근무 상태 변경</strong>: 업무중, 회의중, 외출중 등으로 변경</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>5. 관리자용 대시보드 통계 API (Dashboard Admin)</h2>
+        <p>회사 전체의 실시간 지표를 확인합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/dashboard/stats</code></td>
+                    <td align="left"><strong>대시보드 통계 조회</strong>: 실시간 출근자, 위험군 현황 등</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/dashboard/stats/yesterday</code></td>
+                    <td align="left"><strong>어제자 통계 조회</strong>: 전날의 주요 지점 데이터 비교용</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/dashboard/subscribe</code></td>
+                    <td align="left"><strong>SSE 구독</strong>: 대시보드 데이터 실시간 갱신을 위한 스트림 구독</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>6. 직원 근태 관리 API (Attendance)</h2>
+        <p>개인의 근무 및 휴가 이력을 확인합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/employee/attendance/summary</code></td>
+                    <td align="left"><strong>근태 요약 조회</strong>: 월별 총 근무 시간, 지각 횟수 등</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/employee/attendance/history</code></td>
+                    <td align="left"><strong>근태 기록 히스토리 조회</strong>: 전체 출퇴근 로그 내역</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/employee/attendance/leaves</code></td>
+                    <td align="left"><strong>휴가 신청 현황 조회</strong>: 본인이 신청한 휴가의 승인/반려 상태</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>7. 직원용 휴가 관리 API (Vacation Employee)</h2>
+        <p>휴가 신청 및 취소 기능을 담당합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/employee/vacation</code></td>
+                    <td align="left"><strong>휴가 신청</strong>: 연차, 반차 등 휴가 신청 생성</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>DELETE</code></td>
+                    <td align="left"><code>/api/employee/vacation/{vacationId}</code></td>
+                    <td align="left"><strong>휴가 취소</strong>: &#39;대기&#39; 상태인 신청 건 취소</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>8. 관리자용 휴가 관리 API (Vacation Admin)</h2>
+        <p>사내 휴가 신청을 승인하거나 반려합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/vacation</code></td>
+                    <td align="left"><strong>휴가 신청 목록 조회</strong>: 회사 전체의 미처리 휴가 신청 목록</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PUT</code></td>
+                    <td align="left"><code>/api/admin/vacation/{vacationId}/approve</code></td>
+                    <td align="left"><strong>휴가 승인</strong>: 특정 신청 건 승인 처리</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PUT</code></td>
+                    <td align="left"><code>/api/admin/vacation/{vacationId}/reject</code></td>
+                    <td align="left"><strong>휴가 반려</strong>: 특정 신청 건 사유와 함께 반려</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>9. 실시간 채팅 API (Chatting)</h2>
+        <p>회원 간 1:1 및 그룹 채팅 기능을 제공합니다.</p>
+        <h3>REST API</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/chat/rooms</code></td>
+                    <td align="left"><strong>내 채팅방 목록 조회</strong>: 참여 중인 방 목록 조회</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/chat/room</code></td>
+                    <td align="left"><strong>채팅방 생성/조회</strong>: 상대방과 1:1 대화방 시작 (상대방 ID 기반)</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/chat/create</code></td>
+                    <td align="left"><strong>채팅방 생성</strong>: 다자간 대화 등 신규 방 생성</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/chat/history/{roomId}</code></td>
+                    <td align="left"><strong>채팅 기록 조회</strong>: 특정 방의 이전 메시지 내역</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/chat/room/{roomId}/read</code></td>
+                    <td align="left"><strong>메시지 읽음 처리</strong>: 특정 방의 모든 메시지 읽음 갱신</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PATCH</code></td>
+                    <td align="left"><code>/api/chat/message/{messageId}</code></td>
+                    <td align="left"><strong>메시지 수정</strong>: 보낸 메시지 내용 수정</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>DELETE</code></td>
+                    <td align="left"><code>/api/chat/message/{messageId}</code></td>
+                    <td align="left"><strong>메시지 삭제</strong>: 보낸 메시지 삭제</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/chat/members</code></td>
+                    <td align="left"><strong>회사 내 사용자 조회</strong>: 채팅방 초대 및 시작을 위한 멤버 검색</td>
+                </tr>
+            </tbody>
+        </table>
+        <h3>WebSocket (STOMP)</h3>
+        <ul>
+            <li><strong>Endpoint</strong>: <code>/ws-stomp</code></li>
+            <li><strong>보내기 (Pub)</strong>: <code>/pub/chat/message</code>
+                <ul>
+                    <li>Payload:
+                        <code>{ &quot;roomId&quot;: Long, &quot;senderId&quot;: Long, &quot;content&quot;: String, &quot;type&quot;: &quot;TALK&quot; }</code>
+                    </li>
+                </ul>
+            </li>
+            <li><strong>받기 (Sub)</strong>: <code>/sub/chat/room/{roomId}</code></li>
+        </ul>
+        <hr>
+        <h2>10. AI 챗봇 API (AI Chat)</h2>
+        <p>도움이 필요한 경우 AI와 대화합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/chat</code></td>
+                    <td align="left"><strong>AI 메시지 전송</strong>: 상담 혹은 질문 메시지 전송 및 답변 수신</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>11. 알림 API (Notification)</h2>
+        <p>시스템 알림 및 실시간 알림을 관리합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/subscribe/{memberId}</code></td>
+                    <td align="left"><strong>알림 구독 (SSE)</strong>: 실시간 알림 수신을 위한 SSE 구독</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/notifications/{memberId}</code></td>
+                    <td align="left"><strong>알림 내역 조회</strong>: 해당 사용자의 최근 알림 목록 조회</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PATCH</code></td>
+                    <td align="left"><code>/api/notifications/{id}/read</code></td>
+                    <td align="left"><strong>알림 읽음 처리</strong>: 특정 알림을 확인 상태로 변경</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PATCH</code></td>
+                    <td align="left"><code>/api/notifications/read-all/{memberId}</code></td>
+                    <td align="left"><strong>모든 알림 읽음 처리</strong>: 사용자의 모든 미확인 알림 확인 처리</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>12. 직원용 포인트 몰 API (Gifticon Employee)</h2>
+        <p>획득한 포인트로 기프티콘을 구매하고 미션을 수행합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/employee/shop/{userId}</code></td>
+                    <td align="left"><strong>포인트 몰 메인 데이터 조회</strong>: 포인트, 미션, 상점 통합 데이터</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/employee/shop/purchase</code></td>
+                    <td align="left"><strong>기프티콘 구매</strong>: 포인트를 소모하여 상품 교환</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/employee/shop/mission/complete</code></td>
+                    <td align="left"><strong>미션 완료 및 보상 지급</strong>: 미션 수행 확인 후 포인트 지급</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/employee/shop/attendance/check-in</code></td>
+                    <td align="left"><strong>출근 체크 미션 업데이트</strong>: 출근 시 미션 진행 데이터 전송</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>13. 관리자용 상점 관리 API (Gifticon Admin)</h2>
+        <p>판매 상품의 재고와 판매 상태를 관리합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/shop/items</code></td>
+                    <td align="left"><strong>아이템 목록 조회</strong>: 상점의 모든 상품 현황 조회</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PUT</code></td>
+                    <td align="left"><code>/api/admin/shop/items/{id}/{quantity}</code></td>
+                    <td align="left"><strong>아이템 수량 업데이트</strong>: 재고 변경</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PATCH</code></td>
+                    <td align="left"><code>/api/admin/shop/items/{id}/toggle</code></td>
+                    <td align="left"><strong>아이템 활성 상태 토글</strong>: 판매 시작/중지</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/admin/shop/items/activate-all</code></td>
+                    <td align="left"><strong>아이템 전체 활성화</strong></td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/admin/shop/items/deactivate-all</code></td>
+                    <td align="left"><strong>아이템 전체 비활성화</strong></td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/shop/history/all</code></td>
+                    <td align="left"><strong>전체 구매 내역 조회</strong>: 전 직원의 구매 이력 통계</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>14. 상담 신청 및 관리 API (Consultation &amp; Admin)</h2>
+        <p>심리 상담 혹은 업무 상담을 신청하고 관리합니다.</p>
+        <h3>직원용</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/consultations</code></td>
+                    <td align="left"><strong>상담 신청 생성</strong>: 고민 및 희망 시간 등 작성</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/consultations/me</code></td>
+                    <td align="left"><strong>본인 상담 신청 목록 조회</strong>: 내 신청 건의 현재 상태 여부 확인</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/consultations/count</code></td>
+                    <td align="left"><strong>대기 중인 상담 수 조회</strong>: 회사 내 전체 상담 대기 밀도 확인</td>
+                </tr>
+            </tbody>
+        </table>
+        <h3>관리자용</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/consultations</code></td>
+                    <td align="left"><strong>상담 신청 목록 조회</strong>: 회사 내 상담 요청 리스트</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PUT</code></td>
+                    <td align="left"><code>/api/admin/consultations/{consultationId}/complete</code></td>
+                    <td align="left"><strong>상담 완료 처리</strong>: 상담 진행 후 완료 상태 변경</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PUT</code></td>
+                    <td align="left"><code>/api/admin/consultations/{consultationId}/cancel</code></td>
+                    <td align="left"><strong>상담 취소 처리</strong>: 부적절한 요청 혹은 일정 문제로 취소</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>15. 회사 및 조직 관리 API (Company &amp; Department)</h2>
+        <p>회사 정보와 조직 구성을 관리합니다.</p>
+        <h3>회사 관련</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/companies/genderate-code</code></td>
+                    <td align="left"><strong>회사 코드 생성</strong>: 회사 등록을 위한 유효 코드 발급</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/companies/register</code></td>
+                    <td align="left"><strong>회사 등록</strong>: 신규 회사를 시스템에 등록 (관리자 권한)</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/companies/by-code/{companyCode}</code></td>
+                    <td align="left"><strong>코드 기반 회사 조회</strong>: 코드로 회사 확인 및 정보(부서/직급) 수신</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/companies/join</code></td>
+                    <td align="left"><strong>회사 참여 신청</strong>: 해당 회사로 입사 신청</td>
+                </tr>
+            </tbody>
+        </table>
+        <h3>부서 관련</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/departments/{departmentId}</code></td>
+                    <td align="left"><strong>부서 상세 정보 조회</strong>: 부서명 및 기본 지표</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/departments/{departmentId}/members</code></td>
+                    <td align="left"><strong>부서원 목록 조회 (페이징)</strong>: 특정 부서 소속 멤버 리스트</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>16. 관리자용 입사 신청 관리 API (Company Join)</h2>
+        <p>신규 입사자의 승인 과정을 관리합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/joins</code></td>
+                    <td align="left"><strong>입사 신청 목록 조회</strong>: 대기 중인 가입 희망자 목록</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PUT</code></td>
+                    <td align="left"><code>/api/admin/joins/{memberId}/approve</code></td>
+                    <td align="left"><strong>입사 신청 승인</strong>: 해당 멤버를 정식 소속으로 승인</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>PUT</code></td>
+                    <td align="left"><code>/api/admin/joins/{memberId}/reject</code></td>
+                    <td align="left"><strong>입사 신청 반려</strong>: 승인 거절</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/joins/ranks</code></td>
+                    <td align="left"><strong>직급 목록 조회</strong>: 가입 승인 시 부여할 직급 리스트 조회</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>17. 명함 관리 API (Business Card)</h2>
+        <p>명함 정보 추출 및 등록을 지원합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/business-card/extract</code></td>
+                    <td align="left"><strong>명함 정보 추출</strong>: 이미지(OCR/AI)로부터 이름, 연락처 등 추출</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/business-card/register</code></td>
+                    <td align="left"><strong>명함 등록</strong>: 추출된 정보를 바탕으로 최종 저장</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/business-card/contacts</code></td>
+                    <td align="left"><strong>명함 목록 조회</strong>: 사내 및 공유된 명함 연락처 목록</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>18. 통화 기록 API (Call Record)</h2>
+        <p>통화 내역 업로드 및 STT(Speech-to-Text) 분석 결과를 제공합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/call-records</code></td>
+                    <td align="left"><strong>통화 녹음 파일 업로드</strong>: 파일을 서버로 전송 및 STT 시작</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/call-records</code></td>
+                    <td align="left"><strong>통화 기록 목록 조회</strong>: 본인 혹은 회사의 통화 이력 리스트</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/call-records/search</code></td>
+                    <td align="left"><strong>전화번호 검색</strong>: 특정 번호 혹은 내용으로 기록 검색</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/call-records/{recordId}/reprocess</code></td>
+                    <td align="left"><strong>STT 재처리</strong>: 에러가 발생한 건에 대해 인식 재시도</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>19. 관리자용 모니터링 API (Monitoring Admin)</h2>
+        <p>실시간 지표 모니터링 및 리포트를 출력합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/monitoring</code></td>
+                    <td align="left"><strong>모니터링 데이터 조회</strong>: 전체 근무 현황 및 요약 데이터</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/monitoring/excel</code></td>
+                    <td align="left"><strong>엑셀 다운로드</strong>: 현재 필터링된 데이터를 엑셀 파일로 생성</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2>20. 관리자용 팀 관리 API (Team Admin)</h2>
+        <p>회사 내 조직 및 멤버를 통합 관리합니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">메서드</th>
+                    <th align="left">엔드포인트</th>
+                    <th align="left">설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/team/members</code></td>
+                    <td align="left"><strong>전체 멤버 목록 조회 (페이징)</strong>: 회사 모든 직원 목록 관리</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/team/members/{memberId}/attendance</code></td>
+                    <td align="left"><strong>특정 멤버 근태 조회</strong>: 개별 직원의 상세 근태 캘린더 데이터</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/team/stats</code></td>
+                    <td align="left"><strong>팀 통계 조회</strong>: 부서별 인원 및 성과 지표 요약</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/team/departments</code></td>
+                    <td align="left"><strong>부서 목록 조회 (이름만)</strong>: 부서 이동 및 필터용 목록</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>GET</code></td>
+                    <td align="left"><code>/api/admin/team/departments-list</code></td>
+                    <td align="left"><strong>부서 목록 상세 조회</strong>: 관리용 부서 상세 리스트</td>
+                </tr>
+                <tr>
+                    <td align="left"><code>POST</code></td>
+                    <td align="left"><code>/api/admin/team/departments</code></td>
+                    <td align="left"><strong>부서 생성</strong>: 새로운 조직(부서) 추가</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr>
+        <h2 id="common-response">공통 응답 규격 (Common Response)</h2>
+        <p>모든 API는 아래와 같은 표준 응답 구조를 가집니다.</p>
+        <h3>성공 (Success)</h3>
+        <pre><code class="language-json">{
+  &quot;status&quot;: &quot;success&quot;,
+  &quot;message&quot;: &quot;요청이 성공적으로 처리되었습니다.&quot;,
+  &quot;data&quot;: { ... }
+}
+</code></pre>
+        <h3>실패 (Error)</h3>
+        <pre><code class="language-json">{
+  &quot;status&quot;: &quot;error&quot;,
+  &quot;message&quot;: &quot;에러 발생 시 출력되는 메시지입니다.&quot;,
+  &quot;data&quot;: null
+}
+</code></pre>
+
+    </main>
+</body>
+
+</html>
