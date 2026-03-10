@@ -70,7 +70,7 @@
 | **Backend** | ![Java 17](https://img.shields.io/badge/Java_17-ED8B00?style=flat) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat&logo=spring-boot&logoColor=white) ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=flat&logo=spring-security&logoColor=white) ![Spring Data JPA](https://img.shields.io/badge/Spring_Data_JPA-6DB33F?style=flat&logo=spring&logoColor=white) ![MyBatis](https://img.shields.io/badge/MyBatis-C70D2C?style=flat&logo=mybatis&logoColor=white) ![WebSocket](https://img.shields.io/badge/WebSocket-010101?style=flat&logo=socket.io&logoColor=white) ![JWT](https://img.shields.io/badge/JWT-000000?style=flat&logo=json-web-tokens&logoColor=white) ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=flat&logo=swagger&logoColor=black) ![Gradle](https://img.shields.io/badge/Gradle-02303A?style=flat&logo=gradle&logoColor=white) |
 | **Database** | ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=flat&logo=mysql&logoColor=white) ![Oracle](https://img.shields.io/badge/Oracle-F80000?style=flat&logo=oracle&logoColor=white) ![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat&logo=redis&logoColor=white) |
 | **Infra** | ![AWS](https://img.shields.io/badge/AWS-232F3E?style=flat&logo=amazon-aws&logoColor=white) ![EC2](https://img.shields.io/badge/EC2-FF9900?style=flat&logo=amazon-ec2&logoColor=white) ![S3](https://img.shields.io/badge/S3-569A31?style=flat&logo=amazon-s3&logoColor=white) ![RDS](https://img.shields.io/badge/RDS-527FFF?style=flat&logo=amazon-rds&logoColor=white) ![CloudFront](https://img.shields.io/badge/CloudFront-FF9900?style=flat&logo=amazon-aws&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat&logo=github-actions&logoColor=white) |
-| **Frontend** | ![React](https://img.shields.io/badge/React_18-20232A?style=flat&logo=react&logoColor=61DAFB) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black) ![Zustand](https://img.shields.io/badge/Zustand-443E38?style=flat&logo=react&logoColor=white) ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=flat&logo=axios&logoColor=white) ![Styled-components](https://img.shields.io/badge/Styled--components-DB7093?style=flat&logo=styled-components&logoColor=white) ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3&logoColor=white) |
+| **Frontend** | ![React](https://img.shields.io/badge/React_19-20232A?style=flat&logo=react&logoColor=61DAFB) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black) ![Zustand](https://img.shields.io/badge/Zustand-443E38?style=flat&logo=react&logoColor=white) ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=flat&logo=axios&logoColor=white) ![Styled-components](https://img.shields.io/badge/Styled--components-DB7093?style=flat&logo=styled-components&logoColor=white) ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3&logoColor=white) |
 | **Tools** | ![Git](https://img.shields.io/badge/Git-F05032?style=flat&logo=git&logoColor=white) ![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white) ![IntelliJ IDEA](https://img.shields.io/badge/IntelliJ_IDEA-000000?style=flat&logo=intellij-idea&logoColor=white) ![Postman](https://img.shields.io/badge/Postman-FF6C37?style=flat&logo=postman&logoColor=white) ![Notion](https://img.shields.io/badge/Notion-000000?style=flat&logo=notion&logoColor=white) ![Figma](https://img.shields.io/badge/Figma-F24E1E?style=flat&logo=figma&logoColor=white) ![Slack](https://img.shields.io/badge/Slack-4A154B?style=flat&logo=slack&logoColor=white) |
 | **Experience** | ![JSP](https://img.shields.io/badge/JSP-007396?style=flat&logo=java&logoColor=white) ![JSTL](https://img.shields.io/badge/JSTL-007396?style=flat&logo=java&logoColor=white) ![Thymeleaf](https://img.shields.io/badge/Thymeleaf-005F0F?style=flat&logo=thymeleaf&logoColor=white) ![jQuery](https://img.shields.io/badge/jQuery-0769AD?style=flat&logo=jquery&logoColor=white) ![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?style=flat&logo=bootstrap&logoColor=white) |
 
@@ -124,7 +124,7 @@
 - **결과**: 응답 속도 25초 → 0.9초 단축 (쿼리 호출 150개 → 3개)
 
 #### 🛠 기술 스택
-`Java 17` `Spring Boot 3.4.5` `Spring AI` `Spring Security` `Spring Data JPA` `MySQL` `Redis` `WebSocket (STOMP)` `SSE` `OpenAI` `Google Cloud STT` `React 18` `Zustand` `Docker` `GitHub Actions`
+`Java 17` `Spring Boot 3.4.5` `Spring AI` `Spring Security` `Spring Data JPA` `MySQL` `Redis` `WebSocket (STOMP)` `SSE` `OpenAI` `Google Cloud STT` `React 19` `Zustand` `Docker` `GitHub Actions`
 
 ---
 
@@ -191,7 +191,7 @@
 - **Architecture**: `React` ➡️ `Spring Boot API` ➡️ `MySQL`
 
 #### 🛠 기술 스택
-`Java 17` `Spring Boot 3.4` `Spring Data JPA` `H2 (Dev)` `MySQL (Prod)` `React (Vite)` `JavaScript (ES6+)` `Zustand` `Styled-Components` `VisualCube API`
+`Java 17` `Spring Boot 3.4` `Spring Data JPA` `H2 (Dev)` `MySQL (Prod)` `React 19` `JavaScript (ES6+)` `Zustand` `Styled-Components` `VisualCube API`
 
 ---
 
