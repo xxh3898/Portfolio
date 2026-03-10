@@ -123,6 +123,11 @@
 - **해결 방안**: `WHERE IN` 벌크 조회로 전환 및 애플리케이션 메모리에서 `Map` 자료구조로 `O(1)` 매핑 적용
 - **결과**: 응답 속도 25초 → 0.9초 단축 (쿼리 호출 150개 → 3개)
 
+#### 🤝 협업 및 개발 프로세스
+- GitHub Project 칸반보드를 활용한 이슈 기반 개발
+- Issue → Branch → PR 구조로 작업 관리
+- 담당자 지정 및 작업 상태(이슈/PR 생성 / 작업 중 / 작업 완료 / 문제 발생) 관리로 팀원 간 개발 진행 상황을 한눈에 파악
+
 #### 🛠 기술 스택
 `Java 17` `Spring Boot 3.4.5` `Spring AI` `Spring Security` `Spring Data JPA` `MySQL` `Redis` `WebSocket (STOMP)` `SSE` `OpenAI` `Google Cloud STT` `React 19` `Zustand` `Docker` `GitHub Actions`
 
