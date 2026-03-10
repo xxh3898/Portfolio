@@ -59,6 +59,10 @@
             font-size: 15px;
         }
 
+        code {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
         a {
             color: inherit;
             text-decoration: none;
@@ -307,6 +311,142 @@
         .tag-group img {
             height: 24px;
             display: block;
+        }
+
+        /* ── 기술 스택 숙련도 ── */
+        .skill-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .skill-level {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: .68rem;
+            font-weight: 700;
+            background: var(--navy);
+            color: #fff;
+            letter-spacing: .5px;
+            white-space: nowrap;
+        }
+
+        .skill-level.lv4 {
+            background: #1d4ed8;
+        }
+
+        .skill-level.lv3 {
+            background: #16a34a;
+        }
+
+        .skill-level.lv2 {
+            background: #9ca3af;
+        }
+
+        .skill-level.lv1 {
+            background: #d1d5db;
+            color: #374151;
+        }
+
+        .skill-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 28px;
+            padding: 14px 18px;
+            background: var(--white);
+            border: 1.5px solid var(--gray-100);
+            border-radius: var(--radius);
+        }
+
+        .skill-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .78rem;
+            color: var(--gray-600);
+        }
+
+        /* ── 트러블슈팅 단계 구조 ── */
+        .ts-step {
+            margin-bottom: 10px;
+        }
+
+        .ts-step-title {
+            font-size: .83rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+
+        .ts-step-content {
+            font-size: .83rem;
+            color: var(--gray-600);
+            line-height: 1.7;
+            padding-left: 12px;
+            border-left: 2px solid var(--gray-100);
+        }
+
+        /* ── 참여 소감 ── */
+        .impression-box {
+            background: var(--gray-50);
+            border: 1.5px solid var(--gray-100);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 4px;
+        }
+
+        .impression-row {
+            display: flex;
+            gap: 8px;
+            font-size: .84rem;
+            color: var(--gray-600);
+            line-height: 1.7;
+            margin-bottom: 6px;
+        }
+
+        .impression-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .impression-label {
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* ── 프로젝트 기술 스택 카테고리 분류 ── */
+        .stack-category {
+            margin-bottom: 10px;
+        }
+
+        .stack-category-title {
+            font-size: .72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--gray-400);
+            margin-bottom: 5px;
+        }
+
+        .stack-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .stack-tag {
+            padding: 3px 9px;
+            border-radius: 5px;
+            font-size: .75rem;
+            font-weight: 500;
+            background: var(--gray-100);
+            color: var(--gray-600);
         }
 
         /* ── 프로젝트 ── */
@@ -836,115 +976,238 @@
     <section id="skills">
         <div class="container">
             <h2 class="section-title">🛠 기술 스택</h2>
+
+            <!-- 숙련도 범례 -->
+            <div class="skill-legend">
+                <span class="skill-legend-item"><span class="skill-level lv1">★1</span> 이론 및 개념 숙지</span>
+                <span class="skill-legend-item"><span class="skill-level lv2">★2</span> 사용 경험 보유, 기본 기능 구현 가능</span>
+                <span class="skill-legend-item"><span class="skill-level lv3">★3</span> 개념 이해를 통한 프로젝트 적용 가능</span>
+                <span class="skill-legend-item"><span class="skill-level lv4">★4</span> 구조 설계 및 실무 적용 가능</span>
+            </div>
+
             <div class="skills-grid">
                 <div class="skill-col">
                     <div class="skill-col-title">Backend</div>
                     <div class="tag-group">
-                        <img src="https://img.shields.io/badge/Java_17-ED8B00?style=flat" alt="Java 17">
-                        <img src="https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat&logo=spring-boot&logoColor=white"
-                            alt="Spring Boot">
-                        <img src="https://img.shields.io/badge/Spring_Security-6DB33F?style=flat&logo=spring-security&logoColor=white"
-                            alt="Spring Security">
-                        <img src="https://img.shields.io/badge/Spring_Data_JPA-6DB33F?style=flat&logo=spring&logoColor=white"
-                            alt="Spring Data JPA">
-                        <img src="https://img.shields.io/badge/MyBatis-C70D2C?style=flat&logo=mybatis&logoColor=white"
-                            alt="MyBatis">
-                        <img src="https://img.shields.io/badge/WebSocket-010101?style=flat&logo=socket.io&logoColor=white"
-                            alt="WebSocket">
-                        <img src="https://img.shields.io/badge/JWT-000000?style=flat&logo=json-web-tokens&logoColor=white"
-                            alt="JWT">
-                        <img src="https://img.shields.io/badge/Swagger-85EA2D?style=flat&logo=swagger&logoColor=black"
-                            alt="Swagger">
-                        <img src="https://img.shields.io/badge/Gradle-02303A?style=flat&logo=gradle&logoColor=white"
-                            alt="Gradle">
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Java_17-ED8B00?style=flat" alt="Java 17">
+                            <span class="skill-level lv4">★4</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat&logo=spring-boot&logoColor=white"
+                                alt="Spring Boot">
+                            <span class="skill-level lv4">★4</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Spring_Security-6DB33F?style=flat&logo=spring-security&logoColor=white"
+                                alt="Spring Security">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Spring_Data_JPA-6DB33F?style=flat&logo=spring&logoColor=white"
+                                alt="Spring Data JPA">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/MyBatis-C70D2C?style=flat&logo=mybatis&logoColor=white"
+                                alt="MyBatis">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/WebSocket-010101?style=flat&logo=socket.io&logoColor=white"
+                                alt="WebSocket">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/JWT-000000?style=flat&logo=json-web-tokens&logoColor=white"
+                                alt="JWT">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Swagger-85EA2D?style=flat&logo=swagger&logoColor=black"
+                                alt="Swagger">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Gradle-02303A?style=flat&logo=gradle&logoColor=white"
+                                alt="Gradle">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
                     </div>
                 </div>
 
                 <div class="skill-col">
                     <div class="skill-col-title">Database</div>
                     <div class="tag-group">
-                        <img src="https://img.shields.io/badge/MySQL-4479A1?style=flat&logo=mysql&logoColor=white"
-                            alt="MySQL">
-                        <img src="https://img.shields.io/badge/Oracle-F80000?style=flat&logo=oracle&logoColor=white"
-                            alt="Oracle">
-                        <img src="https://img.shields.io/badge/Redis-DC382D?style=flat&logo=redis&logoColor=white"
-                            alt="Redis">
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/MySQL-4479A1?style=flat&logo=mysql&logoColor=white"
+                                alt="MySQL">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Oracle-F80000?style=flat&logo=oracle&logoColor=white"
+                                alt="Oracle">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Redis-DC382D?style=flat&logo=redis&logoColor=white"
+                                alt="Redis">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
                     </div>
                 </div>
 
                 <div class="skill-col">
                     <div class="skill-col-title">Infra</div>
                     <div class="tag-group">
-                        <img src="https://img.shields.io/badge/AWS-232F3E?style=flat&logo=amazon-aws&logoColor=white"
-                            alt="AWS">
-                        <img src="https://img.shields.io/badge/EC2-FF9900?style=flat&logo=amazon-ec2&logoColor=white"
-                            alt="EC2">
-                        <img src="https://img.shields.io/badge/S3-569A31?style=flat&logo=amazon-s3&logoColor=white"
-                            alt="S3">
-                        <img src="https://img.shields.io/badge/RDS-527FFF?style=flat&logo=amazon-rds&logoColor=white"
-                            alt="RDS">
-                        <img src="https://img.shields.io/badge/CloudFront-FF9900?style=flat&logo=amazon-aws&logoColor=white"
-                            alt="CloudFront">
-                        <img src="https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white"
-                            alt="Docker">
-                        <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat&logo=github-actions&logoColor=white"
-                            alt="GitHub Actions">
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/AWS-232F3E?style=flat&logo=amazon-aws&logoColor=white"
+                                alt="AWS">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/EC2-FF9900?style=flat&logo=amazon-ec2&logoColor=white"
+                                alt="EC2">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/S3-569A31?style=flat&logo=amazon-s3&logoColor=white"
+                                alt="S3">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/RDS-527FFF?style=flat&logo=amazon-rds&logoColor=white"
+                                alt="RDS">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/CloudFront-FF9900?style=flat&logo=amazon-aws&logoColor=white"
+                                alt="CloudFront">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white"
+                                alt="Docker">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat&logo=github-actions&logoColor=white"
+                                alt="GitHub Actions">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
                     </div>
                 </div>
 
                 <div class="skill-col">
                     <div class="skill-col-title">Frontend</div>
                     <div class="tag-group">
-                        <img src="https://img.shields.io/badge/React_18-20232A?style=flat&logo=react&logoColor=61DAFB"
-                            alt="React 18">
-                        <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black"
-                            alt="JavaScript ES6+">
-                        <img src="https://img.shields.io/badge/Zustand-443E38?style=flat&logo=react&logoColor=white"
-                            alt="Zustand">
-                        <img src="https://img.shields.io/badge/Axios-5A29E4?style=flat&logo=axios&logoColor=white"
-                            alt="Axios">
-                        <img src="https://img.shields.io/badge/Styled--components-DB7093?style=flat&logo=styled-components&logoColor=white"
-                            alt="Styled-components">
-                        <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white"
-                            alt="HTML5">
-                        <img src="https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3&logoColor=white"
-                            alt="CSS3">
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/React_18-20232A?style=flat&logo=react&logoColor=61DAFB"
+                                alt="React 18">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black"
+                                alt="JavaScript ES6+">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Zustand-443E38?style=flat&logo=react&logoColor=white"
+                                alt="Zustand">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Axios-5A29E4?style=flat&logo=axios&logoColor=white"
+                                alt="Axios">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Styled--components-DB7093?style=flat&logo=styled-components&logoColor=white"
+                                alt="Styled-components">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white"
+                                alt="HTML5">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3&logoColor=white"
+                                alt="CSS3">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
                     </div>
                 </div>
 
                 <div class="skill-col">
                     <div class="skill-col-title">Tools</div>
                     <div class="tag-group">
-                        <img src="https://img.shields.io/badge/Git-F05032?style=flat&logo=git&logoColor=white"
-                            alt="Git">
-                        <img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github-actions&logoColor=white"
-                            alt="GitHub">
-                        <img src="https://img.shields.io/badge/IntelliJ_IDEA-000000?style=flat&logo=intellij-idea&logoColor=white"
-                            alt="IntelliJ IDEA">
-                        <img src="https://img.shields.io/badge/Postman-FF6C37?style=flat&logo=postman&logoColor=white"
-                            alt="Postman">
-                        <img src="https://img.shields.io/badge/Notion-000000?style=flat&logo=notion&logoColor=white"
-                            alt="Notion">
-                        <img src="https://img.shields.io/badge/Figma-F24E1E?style=flat&logo=figma&logoColor=white"
-                            alt="Figma">
-                        <img src="https://img.shields.io/badge/Slack-4A154B?style=flat&logo=slack&logoColor=white"
-                            alt="Slack">
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Git-F05032?style=flat&logo=git&logoColor=white"
+                                alt="Git">
+                            <span class="skill-level lv4">★4</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white"
+                                alt="GitHub">
+                            <span class="skill-level lv4">★4</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/IntelliJ_IDEA-000000?style=flat&logo=intellij-idea&logoColor=white"
+                                alt="IntelliJ IDEA">
+                            <span class="skill-level lv4">★4</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Postman-FF6C37?style=flat&logo=postman&logoColor=white"
+                                alt="Postman">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Notion-000000?style=flat&logo=notion&logoColor=white"
+                                alt="Notion">
+                            <span class="skill-level lv3">★3</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Figma-F24E1E?style=flat&logo=figma&logoColor=white"
+                                alt="Figma">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Slack-4A154B?style=flat&logo=slack&logoColor=white"
+                                alt="Slack">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
                     </div>
                 </div>
 
                 <div class="skill-col">
                     <div class="skill-col-title">Experience</div>
                     <div class="tag-group">
-                        <img src="https://img.shields.io/badge/JSP-007396?style=flat&logo=java&logoColor=white"
-                            alt="JSP">
-                        <img src="https://img.shields.io/badge/JSTL-007396?style=flat&logo=java&logoColor=white"
-                            alt="JSTL">
-                        <img src="https://img.shields.io/badge/Thymeleaf-005F0F?style=flat&logo=thymeleaf&logoColor=white"
-                            alt="Thymeleaf">
-                        <img src="https://img.shields.io/badge/jQuery-0769AD?style=flat&logo=jquery&logoColor=white"
-                            alt="jQuery">
-                        <img src="https://img.shields.io/badge/Bootstrap-7952B3?style=flat&logo=bootstrap&logoColor=white"
-                            alt="Bootstrap">
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/JSP-007396?style=flat&logo=java&logoColor=white"
+                                alt="JSP">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/JSTL-007396?style=flat&logo=java&logoColor=white"
+                                alt="JSTL">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Thymeleaf-005F0F?style=flat&logo=thymeleaf&logoColor=white"
+                                alt="Thymeleaf">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/jQuery-0769AD?style=flat&logo=jquery&logoColor=white"
+                                alt="jQuery">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
+                        <span class="skill-item">
+                            <img src="https://img.shields.io/badge/Bootstrap-7952B3?style=flat&logo=bootstrap&logoColor=white"
+                                alt="Bootstrap">
+                            <span class="skill-level lv2">★2</span>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -952,6 +1215,7 @@
     </section>
 
     <!-- ── 프로젝트 ── -->
+
     <section id="projects">
         <div class="container">
             <h2 class="section-title">💼 프로젝트</h2>
@@ -1024,7 +1288,7 @@
                         <li class="feature-item">
                             <div>
                                 <strong>출퇴근 로직</strong><br>
-                                출근·퇴근 체크, 기분(Emotion) 기록, 업무중·회의중·외출중 근무 상태 변경 API
+                                출근·퇴근 체크, 기분(Emotion) 기록, 업무중·자리비움·쿨다운 근무 상태 변경 API
                             </div>
                         </li>
                         <li class="feature-item">
@@ -1039,34 +1303,104 @@
                     <ul class="feature-list">
                         <li class="feature-item">
                             <div>
-                                <strong>N+1 문제 해결 및 서버 메모리 매핑 최적화 (응답속도 25초 ➡️ 0.9초)</strong><br>
-                                사내 대시보드 목록 조회 시 반복문(<code>for</code>) 내에서 직원별 휴가, 스트레스, 쿨다운 정보를 3개의 레포지토리로 각각 조회하여
-                                <strong>총 150개의 단건 쿼리가 연쇄적으로 발생하는 N+1 구조적 결함</strong>을 발견했습니다. 이로 인해 화면 로딩에 25초가
-                                소요되었습니다.<br>
-                                문제를 해결하기 위해 개별 조회 로직을 <code>WHERE IN</code> 절을 활용한 벌크 조회(Batch Fetch)로 변경하고, 이를 애플리케이션
-                                메모리 단에서 <code>Map</code> 자료구조를 이용해 매핑(<code>O(1)</code>)하는 방식으로 리팩토링했습니다. 결과적으로
-                                <strong>쿼리 호출 횟수를 150개에서 3개로 단축</strong>하고 <strong>응답 속도를 0.9초로 대폭 개선</strong>하여 DB 부하를
-                                원천 차단했습니다.
+                                <strong>[리팩토링] N+1 문제 해결 및 서버 메모리 매핑 최적화 (응답속도 25초 ➡️ 0.9초)</strong>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">1) 문제점 및 원인분석</div>
+                                    <div class="ts-step-content">사내 대시보드 목록 조회 시 <code>for</code> 루프 내에서 직원별 휴가·스트레스·쿨다운
+                                        정보를 3개 레포지토리에 단건 조회하여 <strong>총 150개의 단건 쿼리가 연쇄 발생하는 N+1 구조적 결함</strong>을 확인. 화면
+                                        로딩에 25초 소요.</div>
+                                </div>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">2) 개선/해결 방안</div>
+                                    <div class="ts-step-content">개별 조회 로직을 <code>WHERE IN</code> 절 벌크 조회(Batch Fetch)로
+                                        전환하고, 애플리케이션 메모리 단에서 <code>Map</code> 자료구조로 <code>O(1)</code> 매핑하는 방식으로 리팩토링.
+                                        비즈니스 로직과 데이터 접근 계층을 명확히 분리하여 유지보수성을 향상.</div>
+                                </div>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">3) 결과/성과</div>
+                                    <div class="ts-step-content"><strong>쿼리 호출 횟수 150개 → 3개 단축, 응답 속도 25초 → 0.9초 (96%
+                                            개선)</strong>. DB 부하 원천 차단.</div>
+                                </div>
                             </div>
                         </li>
                         <li class="feature-item">
                             <div>
-                                <strong>JWT & 프론트 통신 403 Error 해결</strong><br>
-                                부서 및 근태 내역 조회 시 발생하던 403 에러 원인으로 프론트엔드의 로컬 키 불일치(<code>token</code> vs
-                                <code>authToken</code>)와 순수 Axios 직접 import 휴먼 에러를 교차 분석해 해결했습니다.
+                                <strong>JWT & 프론트 통신 403 Error 해결</strong>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">1) 문제점 및 원인분석</div>
+                                    <div class="ts-step-content">부서·근태 내역 조회 시 403 에러 반복 발생. 원인이 백엔드·프론트 양쪽에 분산되어 있어 특정이
+                                        어려운 상황.</div>
+                                </div>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">2) 개선/해결 방안</div>
+                                    <div class="ts-step-content">프론트엔드 로컬 스토리지 키 불일치(<code>token</code> vs
+                                        <code>authToken</code>)와 순수 Axios 직접 import로 인한 인터셉터 미적용 문제를 교차 분석해 원인 특정.
+                                    </div>
+                                </div>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">3) 결과/성과</div>
+                                    <div class="ts-step-content">키 이름 통일 및 공통 Axios 인스턴스 사용으로 수정 후 <strong>403 에러 완전
+                                            해소</strong>.</div>
+                                </div>
                             </div>
                         </li>
                     </ul>
 
                     <div class="project-label">기술 스택</div>
-                    <div class="stack-tags">
-                        <span class="stack-tag">Java 17</span><span class="stack-tag">Spring Boot</span>
-                        <span class="stack-tag">Spring AI</span><span class="stack-tag">Spring Security</span>
-                        <span class="stack-tag">JPA</span><span class="stack-tag">MySQL</span>
-                        <span class="stack-tag">Redis</span><span class="stack-tag">WebSocket</span>
-                        <span class="stack-tag">SSE</span><span class="stack-tag">OpenAI</span>
-                        <span class="stack-tag">Google Cloud STT</span><span class="stack-tag">React 18</span>
-                        <span class="stack-tag">Zustand</span><span class="stack-tag">Docker</span>
+                    <div class="stack-category">
+                        <div class="stack-category-title">Back-end</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">Java 17</span>
+                            <span class="stack-tag">Spring Boot</span>
+                            <span class="stack-tag">Spring AI</span>
+                            <span class="stack-tag">Spring Security</span>
+                            <span class="stack-tag">JPA</span>
+                            <span class="stack-tag">WebSocket</span>
+                            <span class="stack-tag">SSE</span>
+                            <span class="stack-tag">OpenAI API</span>
+                            <span class="stack-tag">Google Cloud STT</span>
+                        </div>
+                    </div>
+                    <div class="stack-category">
+                        <div class="stack-category-title">Front-end</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">React 18</span>
+                            <span class="stack-tag">Zustand</span>
+                            <span class="stack-tag">Axios</span>
+                        </div>
+                    </div>
+                    <div class="stack-category">
+                        <div class="stack-category-title">DB</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">MySQL</span>
+                            <span class="stack-tag">Redis</span>
+                        </div>
+                    </div>
+                    <div class="stack-category">
+                        <div class="stack-category-title">Tool / Infra</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">Docker</span>
+                            <span class="stack-tag">GitHub Actions</span>
+                            <span class="stack-tag">AWS EC2</span>
+                            <span class="stack-tag">Nginx</span>
+                        </div>
+                    </div>
+
+                    <div class="project-label">참여 소감</div>
+                    <div class="impression-box">
+                        <div class="impression-row">
+                            <span class="impression-label">잘된 점</span>
+                            <span>커밋 컨벤션·이슈 템플릿 등 협업 체계를 직접 설계해 팀 전체에 적용한 점, N+1 구조적 결함을 데이터 흐름 관점에서 근본적으로 분석하고 리팩토링으로
+                                해결한 점</span>
+                        </div>
+                        <div class="impression-row">
+                            <span class="impression-label">아쉬운 점</span>
+                            <span>헤더 채팅 알림 기능에 단방향 SSE가 아닌 상대적으로 무거운 WebSocket을 사용한 점</span>
+                        </div>
+                        <div class="impression-row">
+                            <span class="impression-label">보완할 점</span>
+                            <span>경량 SSE 방식으로 단방향 알림 구조를 분리해 서버 자원 효율을 높이는 방향으로 개선 예정</span>
+                        </div>
                     </div>
                     <div class="project-footer">
                         <a class="btn btn-primary" href="https://github.com/Team-Code808" target="_blank">
@@ -1126,7 +1460,7 @@
                     <ul class="feature-list">
                         <li class="feature-item">
                             <div>
-                                <strong>DB 모델링 및 설계 (DB Lead)</strong><br>
+                                <strong>DB 모델링 및 설계</strong><br>
                                 ERD 설계부터 <code>CONSTRAINT FK_...</code>,
                                 <code>CONSTRAINT CHK_STATUS CHECK (STATUS IN ('Y', 'N', 'R'))</code> 등 데이터베이스 단의 무결성 검증
                                 설정 주도
@@ -1151,23 +1485,81 @@
                     <ul class="feature-list">
                         <li class="feature-item">
                             <div>
-                                <strong>데이터 무결성 확보 및 DB 병합 충돌 해결</strong><br>
-                                로컬 환경 개발 시 상태값 체크 조건(예: A 개발자는 '1, 2, 3', B 개발자는 'Y, N, R' 기반)이 통일되지 않아 DB 병합 시 지속적인 데이터
-                                충돌 및 정합성 오류가 발생했습니다.<br>
-                                DB 관리자로서 문제 원인이 단순 문서 부재가 아닌 <strong>명시적 제약조건 적용 누락</strong>에 있음을 파악하고, 상태 컬럼 타입을 통일한 뒤
-                                <code>CONSTRAINT CHK_STATUS CHECK (STATUS IN ('Y', 'N', 'R'))</code>와 같은 데이터베이스 단의 Check
-                                제약 조건을 강제했습니다. 이후 공통 더미 데이터를 배포하여 <strong>팀 전체의 개발 환경을 동기화하고 잠재적인 데이터 무결성 훼손을
-                                    차단</strong>했습니다.
+                                <strong>[리팩토링] 데이터 무결성 확보 및 DB 병합 충돌 해결</strong>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">1) 문제점 및 원인분석</div>
+                                    <div class="ts-step-content">로컬 환경 개발 시 상태값 체크 조건(A 개발자는 '1,2,3', B 개발자는 'Y,N,R'
+                                        기반)이 통일되지 않아 DB 병합 시 지속적인 데이터 충돌 및 정합성 오류 발생. 문제 원인이 단순 문서 부재가 아닌 <strong>명시적 DB
+                                            제약조건 적용 누락</strong>에 있음을 파악.</div>
+                                </div>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">2) 개선/해결 방안</div>
+                                    <div class="ts-step-content">상태 컬럼 타입 통일 후
+                                        <code>CONSTRAINT CHK_STATUS CHECK (STATUS IN ('Y', 'N', 'R'))</code>와 같은 DB 단
+                                        Check 제약 조건 강제 적용. 이후 공통 더미 데이터를 배포하여 팀 전체 개발 환경 동기화. 설계 단계부터 데이터 무결성 기준을 확립하여
+                                        구조적 품질 향상.
+                                    </div>
+                                </div>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">3) 결과/성과</div>
+                                    <div class="ts-step-content"><strong>팀 전체 개발 환경 동기화 및 잠재적 데이터 무결성 훼손 원천 차단</strong>.
+                                        이후 DB 병합 충돌 0건.</div>
+                                </div>
                             </div>
                         </li>
                     </ul>
 
                     <div class="project-label">기술 스택</div>
-                    <div class="stack-tags">
-                        <span class="stack-tag">Java</span><span class="stack-tag">Spring Boot</span>
-                        <span class="stack-tag">MyBatis</span><span class="stack-tag">Oracle</span>
-                        <span class="stack-tag">JSP</span><span class="stack-tag">JSTL</span>
+                    <div class="stack-category">
+                        <div class="stack-category-title">Back-end</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">Java</span>
+                            <span class="stack-tag">Spring Boot</span>
+                            <span class="stack-tag">MyBatis</span>
+                            <span class="stack-tag">Gradle</span>
+                        </div>
                     </div>
+                    <div class="stack-category">
+                        <div class="stack-category-title">Front-end</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">JSP</span>
+                            <span class="stack-tag">JSTL</span>
+                            <span class="stack-tag">jQuery</span>
+                            <span class="stack-tag">Axios</span>
+                        </div>
+                    </div>
+                    <div class="stack-category">
+                        <div class="stack-category-title">DB</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">Oracle</span>
+                        </div>
+                    </div>
+                    <div class="stack-category">
+                        <div class="stack-category-title">Tool</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">Git</span>
+                            <span class="stack-tag">GitHub</span>
+                            <span class="stack-tag">Notion</span>
+                        </div>
+                    </div>
+
+                    <div class="project-label">참여 소감</div>
+                    <div class="impression-box">
+                        <div class="impression-row">
+                            <span class="impression-label">잘된 점</span>
+                            <span>DB 관리자로서 ERD 설계부터 제약조건 강제까지 데이터 무결성 전 과정을 주도하고, Oracle의 <code>LISTAGG</code>와 View 도입으로
+                                복잡한 쿼리 성능을 구조적으로 개선한 점</span>
+                        </div>
+                        <div class="impression-row">
+                            <span class="impression-label">아쉬운 점</span>
+                            <span>JSP 기반 렌더링이다 보니 UI/UX 측면에서 동적 인터랙션 구현에 한계가 있었던 점</span>
+                        </div>
+                        <div class="impression-row">
+                            <span class="impression-label">보완할 점</span>
+                            <span>다음 프로젝트에서 React 등 SPA 프레임워크로 전환하여 사용자 경험을 개선하는 방향으로 발전 예정</span>
+                        </div>
+                    </div>
+
                     <div class="project-footer">
                         <a class="btn btn-primary" href="https://github.com/Team-W3C/W3C-Project" target="_blank">
                             <i class="fa-brands fa-github"></i> GitHub
@@ -1225,34 +1617,92 @@
 
                     <div class="project-label">구현 기능 및 기술적 도전</div>
                     <ul class="feature-list">
-                        <li class="feature-item"><strong>정밀 타이머</strong> — setInterval 누적 오차 문제를 Date.now() Delta Time
+                        <li class="feature-item"><strong>정밀 타이머</strong> setInterval 누적 오차 문제를 Date.now() Delta Time
                             방식으로 해결, 0.001초 단위 측정</li>
-                        <li class="feature-item"><strong>상태 머신 UX</strong> — Stackmat 타이머 UX 이식(idle → holding →
+                        <li class="feature-item"><strong>상태 머신 UX</strong> Stackmat 타이머 UX 이식(idle → holding →
                             running), WCA 규격 20-move 스크램블 생성</li>
-                        <li class="feature-item"><strong>3D 알고리즘 라이브러리</strong> — VisualCube API 연동으로 LBL/CFOP 단계별 3D
+                        <li class="feature-item"><strong>3D 알고리즘 라이브러리</strong> VisualCube API 연동으로 CFOP 단계별 3D
                             시각화</li>
-                        <li class="feature-item"><strong>상태 최적화</strong> — Zustand 도입으로 빈번한 갱신 시 불필요한 리렌더링 최소화</li>
+                        <li class="feature-item"><strong>상태 최적화</strong> Zustand 도입으로 빈번한 갱신 시 불필요한 리렌더링 최소화</li>
                     </ul>
 
                     <div class="project-label">주요 트러블슈팅</div>
                     <ul class="feature-list">
                         <li class="feature-item">
                             <div>
-                                <strong>정밀 타이머 오차 문제 해결 (Delta Time 방식 적용)</strong><br>
-                                브라우저의 <code>setInterval</code> 특성 상 발생하는 밀리초 단위 누적 오차를 발견했습니다.<br>
-                                단순히 interval 간격 증감 로직에 의존하는 대신 <code>Date.now()</code> 기반의 <strong>Delta Time(현재 시간 -
-                                    시작 시간) 방식</strong>으로 타이머 로직을 전면 수정하여 0.001초 단위의 실제 경기용 정밀 계측을 시현했습니다.
+                                <strong>[리팩토링] 정밀 타이머 누적 오차 문제 해결 (Delta Time 방식 적용)</strong>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">1) 문제점 및 원인분석</div>
+                                    <div class="ts-step-content">브라우저 <code>setInterval</code>의 특성상 타이머에 밀리초 도 단위의 누적 오차
+                                        발생. 실제 경기 시연 수준의 정밀도 미달성.</div>
+                                </div>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">2) 개선/해결 방안</div>
+                                    <div class="ts-step-content">interval 간격 증감 로직에서 <code>Date.now()</code> 기반의
+                                        <strong>Delta Time(현재 시간 - 시작 시간)</strong> 방식으로 타이머 코어 로직을 리팩토링. 타이머 상태를 명확한
+                                        상태머신(유휴 → 대기 → 실행)>으로 분리하여 코드 구조 정리.
+                                    </div>
+                                </div>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">3) 결과/성과</div>
+                                    <div class="ts-step-content"><strong>0.001초 단위 실제 경기용 정밀 계측 구현</strong>. 경쮠자 등급의 측정
+                                        신뢰도 확보.</div>
+                                </div>
                             </div>
                         </li>
                     </ul>
 
                     <div class="project-label">기술 스택</div>
-                    <div class="stack-tags">
-                        <span class="stack-tag">Java 17</span><span class="stack-tag">Spring Boot 3.4</span>
-                        <span class="stack-tag">Spring Data JPA</span><span class="stack-tag">MySQL</span>
-                        <span class="stack-tag">H2</span><span class="stack-tag">React (Vite)</span>
-                        <span class="stack-tag">JavaScript ES6+</span><span class="stack-tag">Zustand</span>
-                        <span class="stack-tag">Styled-Components</span><span class="stack-tag">VisualCube API</span>
+                    <div class="stack-category">
+                        <div class="stack-category-title">Back-end</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">Java 17</span>
+                            <span class="stack-tag">Spring Boot 3.4</span>
+                            <span class="stack-tag">Spring Data JPA</span>
+                            <!-- <span class="stack-tag">Spring Security</span> -->
+                        </div>
+                    </div>
+                    <div class="stack-category">
+                        <div class="stack-category-title">Front-end</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">React (Vite)</span>
+                            <span class="stack-tag">JavaScript ES6+</span>
+                            <span class="stack-tag">Zustand</span>
+                            <span class="stack-tag">Styled-Components</span>
+                            <span class="stack-tag">VisualCube API</span>
+                        </div>
+                    </div>
+                    <div class="stack-category">
+                        <div class="stack-category-title">DB</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">MySQL</span>
+                            <span class="stack-tag">H2</span>
+                        </div>
+                    </div>
+                    <!-- <div class="stack-category">
+                        <div class="stack-category-title">Tool / Infra</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">AWS EC2</span>
+                            <span class="stack-tag">AWS S3</span>
+                            <span class="stack-tag">AWS CloudFront</span>
+                        </div>
+                    </div> -->
+
+                    <div class="project-label">참여 소감</div>
+                    <div class="impression-box">
+                        <div class="impression-row">
+                            <span class="impression-label">잘된 점</span>
+                            <span>1인 기획과 개발로 시작부터 수제만균 서비스 아키텍처를 직접 설계하고, 타이머 일반 오차 문제를 내부 동작 원리 분석으로 근본 해결한 점, WCA 규격
+                                스스로 구현한 점</span>
+                        </div>
+                        <div class="impression-row">
+                            <span class="impression-label">아쉬운 점</span>
+                            <span>단기간 개발 일정으로 컴포넌트 설계 기준이 부족했고, 그 결과 도메인 복잡도가 높아져 유지보수 비용이 발생한 점</span>
+                        </div>
+                        <div class="impression-row">
+                            <span class="impression-label">보완할 점</span>
+                            <span>컴포넌트 서비스 계층 분리 및 단위 테스트 추가로 유지보수성 향상 예정</span>
+                        </div>
                     </div>
                     <div class="project-footer">
                         <a class="btn btn-primary" href="https://github.com/xxh3898/cubing-hub" target="_blank">
@@ -1281,8 +1731,12 @@
                 <div class="edu-block">
                     <div class="edu-block-title">학력 · 교육 · 수상</div>
                     <div class="edu-item">
+                        <div class="edu-item-name">남강고등학교</div>
+                        <div class="edu-item-sub">2017.03 - 2020.02</div>
+                    </div>
+                    <div class="edu-item">
                         <div class="edu-item-name">세명대학교 스마트IT학부</div>
-                        <div class="edu-item-sub">졸업 2026.02 &nbsp;·&nbsp; 학점 3.0 / 4.5</div>
+                        <div class="edu-item-sub">2020.03 - 2026.02</div>
                     </div>
                     <div class="edu-item">
                         <div class="edu-item-name">KH 정보교육원</div>
