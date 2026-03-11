@@ -250,54 +250,21 @@
 
             <p class="body-text">
                 CalmDesk 프로젝트에서 직원 대시보드 조회 시 응답 시간이 25초에 달하는 심각한 성능 문제를
-                직접 발견하고 해결했습니다.
+                직접 발견하고 구조적으로 해결한 경험이 있습니다. 도입 초기, 직원 50명 규모의 사내 대시보드에서 
+                목록 조회 시 약 25초의 응답 지연이 발생해 서비스 운영 수준에서는 치명적인 사용성 저하가 우려되었습니다.
             </p>
-
-            <div class="star-block">
-                <div class="star-label">문제 상황</div>
-                <div class="star-content">
-                    직원 50명 규모의 사내 대시보드에서 목록 조회 시 약 25초의 응답 지연 발생.
-                    서비스 운영 수준에서는 치명적인 사용성 저하였습니다.
-                </div>
-            </div>
-
-            <div class="star-block">
-                <div class="star-label">문제 분석</div>
-                <div class="star-content">
-                    SQL 쿼리 로그를 확인한 결과, <code>for</code> 루프 내에서 직원 1명당 출퇴근·기분·업무상태를
-                    3개 레포지토리에 각각 단건 조회하는 구조였습니다.
-                    직원 50명 × 쿼리 3개 = 총 <strong>150개의 쿼리</strong>가 순차 연쇄 발생하는 N+1 문제였습니다.
-                </div>
-            </div>
-
-            <div class="star-block">
-                <div class="star-label">해결 방법</div>
-                <div class="star-content">
-                    <code>WHERE IN</code> 절을 활용한 벌크 조회(단 3번의 쿼리로 전체 데이터 조회)로 전환하고,
-                    조회 결과를 애플리케이션 메모리에서 <code>Map&lt;Long, Data&gt;</code> 구조로 변환해
-                    <code>O(1)</code> 조회로 매핑하는 방식으로 리팩토링했습니다.
-                </div>
-            </div>
-
-            <div class="metric-row">
-                <div class="metric-box">
-                    <div class="metric-value">150개 → 3개</div>
-                    <div class="metric-label">쿼리 호출 수 감소 (98%↓)</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-value">25초 → 0.9초</div>
-                    <div class="metric-label">API 응답 속도 개선 (96%↑)</div>
-                </div>
-            </div>
-
-            <div class="star-block">
-                <div class="star-label">배운 점</div>
-                <div class="star-content">
-                    성능 문제는 현상(느리다)이 아니라 구조(왜 느린가)에서 출발해야 한다는 것을 체감했습니다.
-                    캐시 도입 같은 임시 처방이 아닌, 데이터 흐름 설계 자체를 바꾸는 방향으로 접근해야
-                    지속 가능한 코드가 된다는 인사이트를 얻었습니다.
-                </div>
-            </div>
+            <p class="body-text">
+                원인을 파악하기 위해 SQL 쿼리 로그를 분석한 결과, <code>for</code> 루프 내에서 직원 1명당 출퇴근, 기분, 업무상태를
+                각각의 레포지토리에 단건으로 조회하는 방식이 원인이었습니다. 직원 50명에 대해 쿼리가 3개씩, 총 <strong>150개의 쿼리가 순차적으로 발생하는 전형적인 N+1 문제</strong>였습니다.
+            </p>
+            <p class="body-text">
+                이를 해결하기 위해 <code>WHERE IN</code> 절을 활용한 벌크 조회 방식으로 전환하여, 단 3번의 쿼리만으로 전체 데이터를 불러오도록 리팩토링했습니다.
+                또한, 조회된 결과를 애플리케이션 메모리에서 <code>Map&lt;Long, Data&gt;</code> 구조로 변환하여 <code>O(1)</code> 조회가 가능하도록 로직을 최적화했습니다.
+            </p>
+            <p class="body-text">
+                그 결과 150개에 달하던 쿼리 호출 수를 3개로 줄여 <strong>98% 감소</strong>시켰으며, 25초가 걸리던 API 응답 속도를 <strong>0.9초로 96% 단축</strong>할 수 있었습니다.
+                이 경험을 통해 성능 문제는 현상에 대한 임시 처방이 아니라, 데이터 흐름과 설계 구조 자체를 개선하는 방향으로 접근해야 지속 가능한 코드를 만들 수 있다는 점을 체감했습니다.
+            </p>
         </div>
 
         <!-- 3. 협업 경험 -->
@@ -305,35 +272,19 @@
             <div class="section-title">3. 협업 경험</div>
 
             <p class="body-text">
-                CalmDesk 6인 팀 프로젝트에서 이슈 관리자 역할을 맡아 팀의 협업 체계를 설계하고 운영했습니다.
+                CalmDesk 6인 팀 프로젝트에서는 이슈 관리자 역할을 담당하며 팀의 협업 체계를 주도적으로 설계하고 운영했습니다.
+                초기 개발 단계에서는 팀원들이 각기 다른 기준의 커밋 메시지와 브랜치 네이밍을 사용하여 변경 이력을 추적하거나 
+                코드 리뷰를 진행하는 데 어려움이 많았습니다. 특히 PR에 설명이 부족해 리뷰어가 맥락을 파악하는 데 불필요한 시간이 소요되었습니다.
             </p>
-
-            <div class="star-block">
-                <div class="star-label">상황</div>
-                <div class="star-content">
-                    초기 개발 단계에서 팀원들이 커밋 메시지·브랜치 네이밍을 제각각 사용해 코드 리뷰 및
-                    변경 이력 추적이 어려웠습니다. PR에 설명이 부족해 리뷰어가 맥락을 파악하는 데도
-                    시간이 많이 소요됐습니다.
-                </div>
-            </div>
-
-            <div class="star-block">
-                <div class="star-label">본인의 행동</div>
-                <div class="star-content">
-                    팀 전체에 공통 적용할 Git 커밋 컨벤션(feat / fix / refactor / docs 등)과
-                    GitHub 이슈 템플릿(기능 구현 / 버그 리포트), PR 템플릿(변경 사항 / 테스트 결과 / 관련 이슈 번호)을
-                    직접 작성하여 팀에 배포하고 사용법을 공유했습니다.
-                </div>
-            </div>
-
-            <div class="star-block">
-                <div class="star-label">결과</div>
-                <div class="star-content">
-                    PR 설명 템플릿 도입으로 리뷰 소요 시간을 평균 30% 이상 단축했으며,
-                    팀장으로부터 "협업 체계 덕분에 후반 개발 일정 관리가 수월해졌다"는 피드백을 받았습니다.
-                    최종 프로젝트 우수상 수상으로 이어졌습니다.
-                </div>
-            </div>
+            <p class="body-text">
+                이러한 비효율을 개선하고자 팀 전체에 공통으로 적용할 수 있는 Git 커밋 컨벤션(feat, fix, refactor 등)을 명확히 세우고,
+                기능 구현과 버그 리포트를 위한 GitHub 이슈 템플릿과 PR 템플릿(변경 사항, 테스트 결과, 이슈 번호 포함)을 직접 제작하여 팀에 배포했습니다.
+            </p>
+            <p class="body-text">
+                이처럼 체계화된 템플릿을 도입하고 지속적으로 문화를 정착시킨 결과, 리뷰 소요 시간을 평균 30% 이상 단축할 수 있었습니다.
+                또한 팀장으로부터 "명확한 협업 체계 덕분에 후반 개발 일정 관리가 수월해졌다"는 긍정적인 피드백을 받았으며, 
+                궁극적으로 팀의 기여도를 높여 프로젝트 우수상 수상이라는 성과로 이어질 수 있었습니다.
+            </p>
         </div>
 
         <!-- 4. 입사 후 목표 -->

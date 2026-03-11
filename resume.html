@@ -31,11 +31,40 @@
         /* ── 헤더 ── */
         .header {
             display: flex;
+            align-items: center;
+            gap: 24px;
+            border-bottom: 2.5px solid #1a1a1a;
+            padding-bottom: 20px;
+            margin-bottom: 28px;
+        }
+
+        .header-photo {
+            width: 100px;
+            height: 130px;
+            background-color: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #9ca3af;
+            flex-shrink: 0;
+            overflow: hidden;
+            border-radius: 4px;
+        }
+
+        .header-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header-info {
+            flex: 1;
+            display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            border-bottom: 2.5px solid #1a1a1a;
-            padding-bottom: 16px;
-            margin-bottom: 28px;
+            margin-bottom: 6px;
         }
 
         .header-name {
@@ -224,18 +253,75 @@
 <body>
     <div class="page">
 
-        <!-- 헤더 -->
+        <!-- 인적사항 -->
         <div class="header">
-            <div>
-                <div class="header-name">조치호</div>
-                <div class="header-title">Backend Developer · Java / Spring Boot</div>
+            <div class="header-photo">
+                <img src="assets/images/조치호.jpg" alt="증명사진">
             </div>
-            <div class="header-contact">
-                010-9020-0511 &nbsp;·&nbsp; chiho3898@gmail.com<br>
-                <a href="https://github.com/xxh3898">GitHub</a> &nbsp;·&nbsp;
-                <a href="https://www.chochiho.cloud">포트폴리오</a>
+            <div class="header-info">
+                <div>
+                    <div class="header-name">조치호</div>
+                    <div class="header-title">Backend Developer · Java / Spring Boot</div>
+                </div>
+                <div class="header-contact">
+                    010-9020-0511 &nbsp;·&nbsp; chiho3898@gmail.com<br>
+                    <a href="https://github.com/xxh3898">GitHub</a> &nbsp;·&nbsp;
+                    <a href="https://www.chochiho.cloud">포트폴리오</a>
+                </div>
             </div>
         </div>
+
+        <!-- 학력사항 -->
+        <section>
+            <div class="section-title">Education (학력사항)</div>
+            <div class="edu-row">
+                <div>
+                    <span class="edu-name">세명대학교</span>
+                    <span class="edu-detail"> &nbsp;스마트IT학부</span>
+                </div>
+                <span class="edu-period">2020.03 – 2026.02</span>
+            </div>
+            <div class="edu-row">
+                <div>
+                    <span class="edu-name">남강고등학교</span>
+                    <span class="edu-detail"> &nbsp;인문계열</span>
+                </div>
+                <span class="edu-period">2017.03 – 2020.02</span>
+            </div>
+        </section>
+
+        <!-- 자격증 및 면허 -->
+        <section>
+            <div class="section-title">Certifications &amp; Awards (자격증 및 면허)</div>
+            <div class="cert-row"><span>MOS 2016 Excel Expert</span><span class="edu-period">2025.12</span></div>
+            <div class="cert-row"><span>정보처리기사 필기 합격 (실기 준비 중)</span><span class="edu-period">2025.08</span></div>
+            <div class="cert-row"><span>운전면허 1종 보통</span><span class="edu-period">2022.01</span></div>
+            <div class="cert-row"><span>KH정보교육원 프로젝트 우수상 (팀)</span><span class="edu-period">2026.03</span></div>
+        </section>
+
+        <!-- 병역사항 -->
+        <section>
+            <div class="section-title">Military Service (병역사항)</div>
+            <div class="edu-row">
+                <div>
+                    <span class="edu-name">육군 병장 만기전역</span> <!-- 본인 병역정보에 맞게 수정 -->
+                </div>
+                <span class="edu-period">2022.05 – 2023.11</span>
+            </div>
+        </section>
+
+        <!-- 교육 수료 사항 -->
+        <section>
+            <div class="section-title">Training (교육 수료 사항)</div>
+            <div class="edu-row">
+                <div>
+                    <span class="edu-name">KH 정보교육원</span>
+                    <span class="edu-detail"> &nbsp;AWS 클라우드 기반 DevOps 개발자 양성과정 (Java·Spring · React · Oracle DB ·
+                        AWS)</span>
+                </div>
+                <span class="edu-period">2025.07 – 2026.03</span>
+            </div>
+        </section>
 
         <!-- 기술 스택 -->
         <section>
@@ -344,39 +430,6 @@
                     <span class="stack-tag">Styled-Components</span>
                 </div>
             </div>
-        </section>
-
-        <!-- 교육 -->
-        <section>
-            <div class="section-title">Education</div>
-            <div class="edu-row">
-                <div>
-                    <span class="edu-name">세명대학교</span>
-                    <span class="edu-detail"> &nbsp;스마트IT학부</span>
-                </div>
-                <span class="edu-period">2020.03 – 2026.02</span>
-            </div>
-            <div class="edu-row">
-                <div>
-                    <span class="edu-name">KH 정보교육원</span>
-                    <span class="edu-detail"> &nbsp;AWS 클라우드 기반 DevOps 개발자 양성과정 (Java·Spring · React · Oracle DB ·
-                        AWS)</span>
-                </div>
-                <span class="edu-period">2025.07 – 2026.03</span>
-            </div>
-            <div class="edu-row">
-                <div><span class="edu-name">남강고등학교</span></div>
-                <span class="edu-period">2017.03 – 2020.02</span>
-            </div>
-        </section>
-
-        <!-- 자격증 & 수상 -->
-        <section>
-            <div class="section-title">Certifications &amp; Awards</div>
-            <div class="cert-row"><span>MOS 2016 Excel Expert</span><span class="edu-period">2025.12</span></div>
-            <div class="cert-row"><span>정보처리기사 필기 합격 (실기 준비 중)</span><span class="edu-period">2025.08</span></div>
-            <div class="cert-row"><span>운전면허 1종 보통</span><span class="edu-period">2022.01</span></div>
-            <div class="cert-row"><span>KH정보교육원 프로젝트 우수상 (팀)</span><span class="edu-period">2026.03</span></div>
         </section>
 
         <!-- 기타 -->
