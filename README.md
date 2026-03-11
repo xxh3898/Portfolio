@@ -86,7 +86,8 @@
 다중 접속 환경에서의 WebSocket·SSE 기반 실시간 데이터 스트리밍과, 멀티테넌시 아키텍처를 통한 기업 간 완전한 데이터 격리를 구현한 클라우드 구독형 서비스입니다.
 
 - 📅 **개발 기간**: 2026.01.06 ~ 2026.02.27 (약 8주)
-- 🔗 **GitHub**: [Code808/CalmDesk](https://github.com/Team-Code808)
+- 🔗 **Team GitHub**: [Code808/CalmDesk](https://github.com/Team-Code808)
+- 🌿 **Refactoring (Fork)**: [N+1 최적화 적용 레포지토리](https://github.com/xxh3898/CalmDeskBackend)
 - 📖 **README**: [프로젝트 상세 리드미](https://github.com/Team-Code808#readme)
 - 📄 **API 명세서**: [api-spec.html](./api-spec.html) (Swagger/OpenAPI 기반 직접 작성을 통한 문서화 역량 증명)
 
@@ -121,6 +122,7 @@
 - **해결 방안**: JPA Fetch Join 및 Bulk IN 쿼리 기법을 도입하여 150개의 단건 쿼리를 3개의 최적화된 벌크 쿼리로 통합
 - **결과**: **EC2 CPU 사용률 정상화 및 CPU 크레딧 고갈 극복**
 - **검증**: K6 부하 테스트(50 가상 유저) 결과, 응답 속도(P95) **377ms → 101ms (73% 단축)**, 초당 처리량(RPS) **14% 향상** 입증
+- **상세 해결 과정**: [이슈 해결 리포트 (GitHub Docs)](https://github.com/Team-Code808/Docs/blob/main/%EC%9D%B4%EC%8A%88/%EB%B0%B1%EC%97%94%EB%93%9C%20CD%20%EB%B0%B0%ED%8F%AC%20%EB%B0%8F%20%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C%20%EC%84%B1%EB%8A%A5%20%EC%B5%9C%EC%A0%81%ED%99%94.md)
 
 #### 🤝 협업 및 개발 프로세스
 - GitHub Project 칸반보드를 활용한 이슈 기반 개발
