@@ -1315,10 +1315,9 @@
                                 </div>
                                 <div class="ts-step">
                                     <div class="ts-step-title">3) 해결 방안</div>
-                                    <div class="ts-step-content">150회의 단건 조회를 <strong><code>WHERE IN</code> 절 벌크 쿼리
-                                            3회</strong>로 변경. 이후 애플리케이션 내부에서 시간 복잡도 O(1)의
-                                        <strong><code>Map&lt;Long, Entity&gt;</code> 자료구조를 활용해 데이터 조립·매핑 프로세스</strong>
-                                        구축.</div>
+                                    <div class="ts-step-content">JPA의 <strong><code>@Query JOIN FETCH</code></strong>를 활용해 연관 엔티티(Member)를
+                                            DB 계층에서 <strong>단일 벌크 쿼리(IN + JOIN FETCH) 1회</strong>로 한 번에 페치하도록 리팩토링. 이를 통해 150개의 단건 쿼리를 <strong>3개의 최적화된 벌크 쿼리</strong>로 통합했으며,
+                                        애플리케이션 단 Map 조립은 이미 DB에서 페치된 엔티티를 기반으로 추가 쿼리 없이 수행.</div>
                                 </div>
                                 <div class="ts-step">
                                     <div class="ts-step-title">4) 결과/성과</div>
