@@ -371,8 +371,8 @@
                     <li>Git 커밋 컨벤션·이슈 템플릿·PR 템플릿 도입으로 협업 체계 설계</li>
                 </ul>
                 <div class="highlight-box">
-                    <div class="hl-title">대시보드 API 인프라 관점 병목 해결</div>
-                    <div class="hl-item">· N+1 쿼리 최적화로 DB 부하 및 EC2 CPU 크레딧 고갈 문제 동시 해결</div>
+                    <div class="hl-title">관리자 대시보드 통계 조회 API(<code>GET /api/dashboard/stats</code>) 병목 해결</div>
+                    <div class="hl-item">· JPA Fetch Join / Bulk IN 쿼리 최적화로 N+1 쿼리 해소 → DB 부하 및 EC2 CPU 크레딧 고갈 문제 동시 해결</div>
                     <div class="hl-item">· 응답속도 25초 → 0.9초 (96% 개선) 및 쿼리 150 → 3 (98% 감소)</div>
                 </div>
                 <div class="stack-tags">
