@@ -6,10 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>조치호 | 백엔드 개발자 포트폴리오</title>
     <meta name="description" content="Java / Spring Boot 기반 백엔드 개발자 조치호의 포트폴리오입니다." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap"
-        rel="stylesheet" />
+    <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <style>
         /* ── 디자인 토큰 ── */
@@ -51,8 +49,11 @@
             scroll-behavior: smooth;
         }
 
+        *:not(i) {
+            font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif !important;
+        }
+
         body {
-            font-family: 'Noto Sans KR', sans-serif;
             background: var(--white);
             color: var(--dark);
             line-height: 1.75;
@@ -60,7 +61,8 @@
         }
 
         code {
-            font-family: 'Noto Sans KR', sans-serif;
+            /* 폰트 종류는 위에서 통일하되 폰트 사이즈만 조정 */
+            font-size: 0.9em;
         }
 
         a {
@@ -914,11 +916,11 @@
 
                 <!-- 우측 텍스트 -->
                 <div class="hero-right">
-                    <h1 class="hero-name">응답 속도를 96% 단축하는<br>백엔드 개발자 조치호</h1>
+                    <h1 class="hero-name">N+1 병목을 해소하여 EC2 스로틀링<br>장애를 해결한 백엔드 개발자 조치호</h1>
                     <p class="hero-sub">Java / Spring Boot</p>
                     <p class="hero-intro">
                         단순 개발을 넘어, <strong>클라우드 인프라와 애플리케이션의 연관성</strong>을 분석해 시스템의 근본적인 병목을 해결합니다.<br>
-                        <strong>비효율적인 N+1 쿼리로 인한 EC2 리소스(CPU 크레딧) 고갈 및 25초 응답 지연</strong> 문제를 <strong>JPA Fetch Join / Bulk IN 쿼리 최적화</strong>로 해결하여 <strong>응답 속도를 0.9초로 단축</strong>했습니다.
+                        <strong>비효율적인 N+1 쿼리로 인한 EC2 리소스(CPU 크레딧) 고갈 및 응답 지연</strong> 문제를 <strong>JPA Fetch Join / Bulk IN 쿼리 최적화</strong>로 해결하여 <strong>응답 속도를 377ms에서 101ms로 73% 단축하고, 처리량을 14% 향상</strong>시켰습니다.
                         <br>
                         또한 직접 만든 <strong>11종의 템플릿</strong>으로 <strong>기획·개발·트러블슈팅 전 과정</strong>을 기록하며, 협업에서의 <strong>정보
                             손실을 최소화하는 개발 방식</strong>을 지향합니다.
@@ -945,7 +947,7 @@
                     <div class="competency-grid">
                         <div class="comp-card">
                             <div class="comp-title">🔍 인프라 관점 병목 해결</div>
-                            <div class="comp-desc">비효율 쿼리로 인해 연쇄 발생한 <strong>EC2 자원 고갈(CPU 크레딧)</strong> 병목을 해결해 응답 속도를 25초에서 0.9초로 96% 단축한 성과</div>
+                            <div class="comp-desc">비효율 쿼리로 인해 연쇄 발생한 <strong>EC2 자원 고갈(CPU 크레딧)</strong> 병목을 해결해 <strong>응답 속도 73% 단축 및 처리량 14% 향상</strong>을 이룬 성과</div>
                         </div>
                         <div class="comp-card">
                             <div class="comp-title">📝 문서화 중심 개발 습관</div>
@@ -1258,7 +1260,7 @@
                         <li class="feature-item">
                             <div>
                                 <strong>Key API</strong><br>
-                                <code>GET /api/dashboard/stats</code> (관리자 대시보드 통계 데이터 조회)<br>
+                                <code>GET /api/admin/team/members</code> (관리자 팀 멤버 현황 조회 API)<br>
                                 <code>PUB /pub/chat/message</code> (WebSocket 실시간 그룹/개인 채팅 메시지 발송)
                             </div>
                         </li>
@@ -1269,7 +1271,7 @@
                         <li class="feature-item">
                             <div>
                                 <strong>실시간 채팅</strong><br>
-                                WebSocket(STOMP) 기반 1:1 / 그룹 채팅, 메시지 수정·삭제·읽음 처리 구현
+                                WebSocket(STOMP) 기반 1:1 / 그룹 채팅 및 <strong>커스텀 인터셉터 활용 소켓 연결 JWT 인증</strong> 로직 적용
                             </div>
                         </li>
                         <li class="feature-item">
@@ -1281,13 +1283,13 @@
                         <li class="feature-item">
                             <div>
                                 <strong>출퇴근 로직</strong><br>
-                                출근·퇴근 체크, 기분(Emotion) 기록, 업무중·자리비움·쿨다운 근무 상태 변경 API
+                                출근·퇴근 시 관리자 대시보드 통계 갱신 로직을 <strong>@Async 비동기 이벤트</strong>로 분리하여 직원용 출퇴근 API 응답 지연 방지
                             </div>
                         </li>
                         <li class="feature-item">
                             <div>
                                 <strong>협업 체계 구축</strong><br>
-                                Git 커밋 컨벤션 · 이슈 템플릿 도입으로 병합 충돌 방지 및 리뷰 효율 향상
+                                Git 커밋 컨벤션(feat/fix/refactor 등) · 이슈 · PR 템플릿 도입으로 <strong>리뷰 소요 시간 30% 단축 및 병합 충돌 발생 빈도 감소</strong>. 팀 배포 주기 단축에 기여
                             </div>
                         </li>
                     </ul>
@@ -1296,35 +1298,52 @@
                     <ul class="feature-list">
                         <li class="feature-item">
                             <div>
-                                <strong>[근본 병목 개선] 애플리케이션 비효율로 인한 EC2 CPU 크레딧 고갈 대응 (응답 지연 25초 → 0.9초)</strong>
+                                <strong>[근본 병목 개선] 애플리케이션 비효율로 인한 EC2 CPU 크레딧 고갈 대응 및 인프라 한계 극복</strong>
                                 <div class="ts-step">
-                                    <div class="ts-step-title">1) 문제 발견</div>
-                                    <div class="ts-step-content">Chrome 개발자 도구를 활용한 응답 지연 확인 결과, 관리자 대시보드 통계 조회 API(<code>GET /api/dashboard/stats</code>)에서 25초 지연.
-                                        <br> <strong>AWS Console 확인 결과, EC2(T3 Micro)의 CPU 크레딧이 고갈되어 스로틀링 상태 진입</strong>
-                                        파악.
+                                    <div class="ts-step-title">1) 문제의 발단 (현상 및 인프라 병목)</div>
+                                    <div class="ts-step-content">EC2 운영 환경에서 관리자 팀 멤버 현황 조회 API(<code>GET /api/admin/team/members</code>) 호출 시 <strong>25초의 심각한 지연 및 AWS EC2(T3 Micro) CPU 크레딧 고갈(스로틀링)</strong> 현상 발생 파악.
                                     </div>
                                 </div>
                                 <div class="ts-step">
-                                    <div class="ts-step-title">2) 원인 분석</div>
-                                    <div class="ts-step-content">인스턴스 과부하 원인을 추적한 결과, 직원 데이터 조회 중 발생한 <strong>N+1 쿼리
-                                            현상</strong>(50명 조회 시 150개의 단건 쿼리 발생)이 DB 연산을 폭증시키고 인스턴스 CPU 자원을 과소비한 것으로 판명.
+                                    <div class="ts-step-title">2) 해결 및 1차 결과 (단일 응답 최적화)</div>
+                                    <div class="ts-step-content">과부하 원인을 추적한 결과, 직원 데이터 조회 중 발생한 <strong>N+1 쿼리 구조</strong>(조회 시 150개의 추가 단건 쿼리 발생)를 확인. 이를 JPA의 <strong><code>@Query JOIN FETCH</code></strong>를 활용한 <strong>단일 벌크 쿼리(IN + JOIN FETCH) 1회</strong>로 리팩토링. 이를 통해 150개의 단건 쿼리를 <strong>3회의 쿼리로 통합</strong>하여 연산 부하를 제거했으며, <strong>EC2 인스턴스 지표 정상화 및 응답 속도 단일 기준 0.9초 복구</strong> 달성.
                                     </div>
                                 </div>
                                 <div class="ts-step">
-                                    <div class="ts-step-title">3) 해결 방안</div>
-                                    <div class="ts-step-content">JPA의 <strong><code>@Query JOIN FETCH</code></strong>를 활용해 연관 엔티티(Member)를
-                                            DB 계층에서 <strong>단일 벌크 쿼리(IN + JOIN FETCH) 1회</strong>로 한 번에 페치하도록 리팩토링. 이를 통해 150개의 단건 쿼리를 <strong>3개의 최적화된 벌크 쿼리</strong>로 통합했으며,
-                                        애플리케이션 단 Map 조립은 이미 DB에서 페치된 엔티티를 기반으로 추가 쿼리 없이 수행.</div>
-                                </div>
-                                <div class="ts-step">
-                                    <div class="ts-step-title">4) 결과/성과</div>
+                                    <div class="ts-step-title">3) 최종 검증 (다중 접속 부하 테스트)</div>
                                     <div class="ts-step-content">
-                                        • <strong>응답 속도 96% 향상:</strong> 25초 → <strong>0.9초 단축</strong> (쿼리 호출 150회 →
-                                        3회)<br>
-                                        • <strong>안정성 복구:</strong> 불필요한 연산 점유 최소화로 <strong>EC2 CPU 사용률 정상화 및 CPU 크레딧 고갈
-                                            현상 해결</strong>. <br>
-                                        • 이를 통해 애플리케이션 코드 스코프에서 벗어나, <strong>"앱 코드의 비효율이 어떻게 클라우드 인프라 자원의 마비로 직결될 수
-                                            있는지"</strong> 체감하는 거시적인 병목 시야 확립.
+                                        이러한 단일 응답 최적화 로직이 다중 접속 환경에서도 점유율을 버틸 수 있는지 <strong>K6 부하 테스트(50 VUs)로 교차 검증</strong> 수행. 그 결과, 동시 접속 환경에서도 <strong>응답 지연이 377ms에서 101ms로 73% 단축</strong>되었으며 안정적인 <strong>초당 처리량(RPS) 14% 상승</strong>을 객관적으로 입증.
+                                        
+                                        <div style="margin-top:16px; padding:20px; background:#f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; color: #334155; font-size:13px; line-height:1.6;">
+                                            <div style="max-width:440px; margin:0 auto;">
+                                                <div style="font-weight:600; font-size:14px; margin-bottom:12px; color:#0f172a; text-align:center;"><i class="fa-solid fa-chart-line" style="color:#0284c7; margin-right:6px;"></i>K6 Load Test Profile (50 VUs)</div>
+                                                <div style="display:flex; align-items:center; margin-bottom:10px; justify-content:space-between;">
+                                                    <span style="font-weight:600; color:#475569;">⏱️ 응답 지연 (P95)</span>
+                                                    <div style="display:flex; align-items:center; gap:8px;">
+                                                        <span style="font-weight:600; background:#fee2e2; color:#991b1b; padding:2px 8px; border-radius:4px; min-width:85px; text-align:center;">377.19ms</span>
+                                                        <span style="font-weight:bold; color:#059669; background:#d1fae5; padding:2px 8px; border-radius:4px; min-width:130px; text-align:center;">101.01ms (73%↓)</span>
+                                                    </div>
+                                                </div>
+                                                <div style="display:flex; align-items:center; justify-content:space-between;">
+                                                    <span style="font-weight:600; color:#475569;">🚀 초당 처리량 (RPS)</span>
+                                                    <div style="display:flex; align-items:center; gap:8px;">
+                                                        <span style="font-weight:600; background:#e0e7ff; color:#3730a3; padding:2px 8px; border-radius:4px; min-width:85px; text-align:center;">30.65 회</span>
+                                                        <span style="font-weight:bold; color:#4338ca; background:#c7d2fe; padding:2px 8px; border-radius:4px; min-width:130px; text-align:center;">35.01 회 (14%↑)</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div style="margin-top:20px; display:flex; gap:16px; align-items:flex-start;">
+                                            <div style="flex:1; text-align:center;">
+                                                <span style="display:inline-block; font-size:12px; font-weight:600; color:#b91c1c; background:#fee2e2; padding:4px 12px; border-radius:12px; margin-bottom:8px;">최적화 전 (Before)</span>
+                                                <img src="assets/images/k6-before.png" alt="K6 Load Test Before" style="width:100%; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
+                                            </div>
+                                            <div style="flex:1; text-align:center;">
+                                                <span style="display:inline-block; font-size:12px; font-weight:600; color:#047857; background:#d1fae5; padding:4px 12px; border-radius:12px; margin-bottom:8px;">최적화 후 (After)</span>
+                                                <img src="assets/images/k6-after.png" alt="K6 Load Test After" style="width:100%; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1762,11 +1781,6 @@
                             Java/Spring · React/JS · Oracle DB · RESTful API · AWS 배포
                         </div>
                     </div>
-                    <div class="edu-item">
-                        <div class="edu-item-name">KH정보교육원 프로젝트 우수상 (팀)</div>
-                        <div class="edu-item-sub">2026.03</div>
-                        <span class="cert-badge" style="background:#dbeafe;color:#1d4ed8;">수상</span>
-                    </div>
                 </div>
 
                 <!-- 자격증 -->
@@ -1776,11 +1790,6 @@
                         <div class="edu-item-name">MOS 2016 Excel Expert</div>
                         <div class="edu-item-sub">2025.12</div>
                         <span class="cert-badge">취득</span>
-                    </div>
-                    <div class="edu-item">
-                        <div class="edu-item-name">정보처리기사</div>
-                        <div class="edu-item-sub">2025.08 필기 합격</div>
-                        <span class="cert-badge" style="background:#fef3c7;color:#92400e;">필기 합격</span>
                     </div>
                     <div class="edu-item">
                         <div class="edu-item-name">운전면허 1종 보통</div>

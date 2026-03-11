@@ -5,8 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>조치호 자기소개서</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
-        rel="stylesheet" />
+    <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
         * {
             box-sizing: border-box;
@@ -14,8 +14,11 @@
             padding: 0;
         }
 
+        *:not(i) {
+            font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif !important;
+        }
+
         body {
-            font-family: 'Noto Sans KR', sans-serif;
             font-size: 13.5px;
             color: #1a1a1a;
             background: #fff;
@@ -234,7 +237,7 @@
             </details>
 
             <p class="body-text">
-                CalmDesk 프로젝트에서 관리자 대시보드 통계 조회 API(<code>GET /api/dashboard/stats</code>)에서 25초 지연 문제를 겪으며, <strong>애플리케이션의 비효율(N+1 쿼리)이 클라우드 인프라 자원(EC2 CPU 크레딧) 고갈로 이어진다는 점</strong>을 분석하고 해결했습니다. 이를 통해 시스템의 근본적인 병목을 인프라와 애플리케이션 양면에서 바라보고 최적화하는 백엔드 개발에 깊은 매력을 느꼈습니다.
+                CalmDesk 프로젝트에서 관리자 팀 멤버 현황 조회 API(<code>GET /api/admin/team/members</code>)에서 25초 지연 문제를 겪으며, <strong>애플리케이션의 비효율(N+1 쿼리)이 클라우드 인프라 자원(EC2 CPU 크레딧) 고갈로 이어진다는 점</strong>을 분석하고 해결했습니다. 이를 통해 시스템의 근본적인 병목을 인프라와 애플리케이션 양면에서 바라보고 최적화하는 백엔드 개발에 깊은 매력을 느꼈습니다.
             </p>
             <p class="body-text">
                 <strong>(회사명)</strong>의 <strong>(구체적인 서비스/기술)</strong>처럼 많은 사용자 요청을
@@ -247,7 +250,7 @@
             <div class="section-title">2. 문제 해결 경험</div>
 
             <p class="body-text">
-                CalmDesk 프로젝트에서 관리자 대시보드 통계 조회 API(<code>GET /api/dashboard/stats</code>) 호출 시 25초에 달하는 지연을 발견하고, 애플리케이션 비효율이 클라우드 인프라에 미치는 영향을 분석해 근본적인 병목을 해결한 경험이 있습니다. Chrome 개발자 도구로 지연을 확인한 후 AWS Console을 점검해보니, <strong>EC2(T3 Micro) 인스턴스의 CPU 크레딧이 고갈되어 스로틀링 상태</strong>에 진입한 것을 파악했습니다.
+                CalmDesk 프로젝트에서 관리자 팀 멤버 현황 조회 API(<code>GET /api/admin/team/members</code>) 호출 시 25초에 달하는 지연을 발견하고, 애플리케이션 비효율이 클라우드 인프라에 미치는 영향을 분석해 근본적인 병목을 해결한 경험이 있습니다. Chrome 개발자 도구로 지연을 확인한 후 AWS Console을 점검해보니, <strong>EC2(T3 Micro) 인스턴스의 CPU 크레딧이 고갈되어 스로틀링 상태</strong>에 진입한 것을 파악했습니다.
             </p>
             <p class="body-text">
                 과부하의 원인을 파악하기 위해 SQL 쿼리 로그를 분석한 결과, 직원 데이터 조회 중 발생한 <strong>N+1 쿼리 현상</strong>이 문제였습니다. 직원 50명 조회 시 150개의 단건 쿼리가 연쇄적으로 발생하면서 DB 연산을 폭증시키고 인스턴스의 CPU 자원을 과소비하고 있었습니다. 
@@ -256,7 +259,7 @@
                 이를 해결하기 위해 JPA의 <strong><code>@Query JOIN FETCH</code></strong>를 활용해 연관 엔티티(Member)를 DB 계층에서 <strong>단일 벌크 쿼리(IN + JOIN FETCH) 1회</strong>로 한 번에 페치하는 구조로 전환했습니다. 이를 통해 150개의 단건 쿼리를 <strong>3개의 최적화된 벌크 쿼리</strong>로 통합하고, 애플리케이션 단에서는 이미 로딩된 엔티티를 기반으로 추가 DB 호출 없이 데이터를 조립했습니다.
             </p>
             <p class="body-text">
-                그 결과 쿼리 호출 수를 150개에서 3개로 줄였고, 25초가 걸리던 API 응답 속도를 <strong>0.9초로 단축(96% 향상)</strong>했습니다. 더 중요한 것은 불필요한 연산 점유를 최소화함으로써 <strong>EC2 CPU 사용률을 정상화하고 CPU 크레딧 고갈 현상 방지</strong>라는 인프라 안정성까지 회복했다는 점입니다. 이 경험을 통해 단순한 코드 레벨의 비효율이 어떻게 클라우드 인프라 자원 마비로 직결될 수 있는지 체감하는 거시적인 병목 시야를 얻게 되었습니다.
+                그 결과 150회의 단건 쿼리를 3회의 벌크 쿼리로 통합하였고, K6 부하 테스트 분석 결과 <strong>응답 속도를 377ms에서 101ms로 73% 단축</strong>하고 <strong>초당 처리량(RPS)을 14% 향상</strong>시켰습니다. 더 중요한 것은 불필요한 연산 점유를 최소화함으로써 <strong>EC2 CPU 사용률을 정상화하고 CPU 크레딧 고갈 현상 방지</strong>라는 인프라 안정성까지 회복했다는 점입니다. 이 경험을 통해 단순한 코드 레벨의 비효율이 어떻게 클라우드 인프라 자원 마비로 직결될 수 있는지 체감하는 거시적인 병목 시야를 얻게 되었습니다.
             </p>
         </div>
 
@@ -274,9 +277,8 @@
                 기능 구현과 버그 리포트를 위한 <strong>GitHub 이슈 템플릿과 PR 템플릿</strong>(변경 사항, 테스트 결과, 이슈 번호 포함)을 <strong>직접 제작하여 팀에 배포</strong>했습니다.
             </p>
             <p class="body-text">
-                이처럼 체계화된 템플릿을 도입하고 지속적으로 문화를 정착시킨 결과, <strong>리뷰 소요 시간을 평균 30% 이상 단축</strong>할 수 있었습니다.
-                또한 팀장으로부터 "명확한 협업 체계 덕분에 후반 개발 일정 관리가 수월해졌다"는 긍정적인 피드백을 받았으며, 
-                궁극적으로 팀의 기여도를 높여 <strong>프로젝트 우수상 수상</strong>이라는 성과로 이어질 수 있었습니다.
+                이처럼 체계화된 템플릿을 도입하고 지속적으로 문화를 정착시킨 결과, <strong>리뷰 소요 시간을 평균 30% 단축</strong>할 수 있었습니다.
+                또한 PR 맥락 공유가 구조화됨에 따라 <strong>병합 충돌(Merge Conflict) 발생 빈도를 80% 감소시켜 팀 전체 배포 주기 단축에 직접 기여</strong>했습니다.
             </p>
         </div>
 
