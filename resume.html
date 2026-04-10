@@ -264,7 +264,7 @@
             <div class="header-info">
                 <div>
                     <div class="header-name">조치호</div>
-                    <div class="header-title">Backend Developer · Java / Spring Boot</div>
+                    <div class="header-title">N+1 쿼리와 성능 병목을 분석해 EC2 스로틀링 문제까지 해결한 Java / Spring 백엔드 개발자</div>
                 </div>
                 <div class="header-contact">
                     010-9020-0511 &nbsp;·&nbsp; chiho3898@gmail.com<br>
@@ -329,26 +329,19 @@
             <div class="section-title">Technical Skills</div>
             <div class="skill-grid">
                 <span class="skill-label">Backend</span>
-                <span class="skill-value"><strong>Java 17</strong> · <strong>Spring Boot</strong> · Spring Security ·
-                    Spring Data JPA · WebSocket (STOMP)
-                    · SSE · JWT · Swagger</span>
+                <span class="skill-value"><strong>Java 17</strong> · <strong>Spring Boot</strong> · <strong>Spring Data JPA</strong> · Spring Security · WebSocket (STOMP) · SSE · JWT · Swagger · MyBatis</span>
 
                 <span class="skill-label">Database</span>
-                <span class="skill-value"><strong>MySQL</strong> · Oracle · <strong>Redis</strong> · Spring Data JPA ·
-                    MyBatis</span>
+                <span class="skill-value"><strong>MySQL</strong> · Redis · Oracle</span>
 
                 <span class="skill-label">Infra / DevOps</span>
-                <span class="skill-value"><strong>AWS</strong> (EC2 · S3 · RDS · CloudFront) · <strong>Docker</strong> ·
-                    Nginx · GitHub Actions</span>
-
-                <span class="skill-label">Tools</span>
-                <span class="skill-value"><strong>Git</strong> · GitHub · IntelliJ IDEA · Postman · Notion · Slack ·
-                    Figma</span>
+                <span class="skill-value"><strong>AWS</strong> (EC2 · RDS · S3 · CloudFront) · Docker · Nginx · GitHub Actions</span>
 
                 <span class="skill-label">Frontend</span>
-                <span class="skill-value"><strong>React 19</strong> · Zustand · Axios · Styled-components · HTML5 · CSS3
-                    · JavaScript
-                    ES6+</span>
+                <span class="skill-value">React 19 · Zustand · Axios · JavaScript · HTML/CSS</span>
+
+                <span class="skill-label">Testing / Tools</span>
+                <span class="skill-value"><strong>Git</strong> · K6 · Postman · GitHub · IntelliJ IDEA · Notion · Slack · Figma</span>
             </div>
         </section>
 
@@ -363,18 +356,17 @@
                     <span class="project-meta">2026.01 - 2026.02 &nbsp;|&nbsp; 5인 팀 (Code808)</span>
                 </div>
                 <div class="project-role">이슈 관리자 / 실시간 채팅·대시보드·출퇴근 담당</div>
-                <div class="project-desc">WebSocket·SSE 기반 실시간 데이터 스트리밍과 멀티테넌시 아키텍처로 기업 간 데이터 격리를 구현한 B2B HR SaaS 통합 관리
-                    플랫폼</div>
+                <div class="project-desc">성능 병목 분석과 실시간 기능 구현을 담당한 B2B HR SaaS 통합 관리 플랫폼</div>
                 <ul class="bullet-list">
-                    <li>WebSocket(STOMP) 기반 실시간 통신 환경 구축 및 <strong>커스텀 인터셉터(ChannelInterceptor)</strong>를 활용한 소켓 연결 단계의 JWT 인증/보안 적용</li>
-                    <li>직원 대시보드 — 업무통계·스트레스지수 요약 데이터 조회 및 실시간 현황</li>
-                    <li>출근·퇴근 시 관리자 대시보드의 실시간 통계가 갱신되는 무거운 로직을 <strong>@Async 비동기 이벤트 리스너</strong>로 분리하여 직원용 출퇴근 API 응답 속도 저하 방지</li>
-                    <li>Git 커밋 컨벤션·이슈·PR 템플릿 도입으로 리뷰 소요 시간 30% 단축 및 병합 충돌 발생 빈도 감소</li>
+                    <li><strong>문제 분석</strong> - 관리자 팀/멤버 조회 API에서 N+1 쿼리로 인한 DB 부하와 EC2 CPU 크레딧 고갈 원인을 추적</li>
+                    <li><strong>근본 해결</strong> - JPA Fetch Join과 Bulk IN 쿼리로 150회의 단건 쿼리를 3회의 벌크 쿼리로 통합</li>
+                    <li><strong>검증 결과</strong> - K6 부하 테스트 기준 응답 속도 377ms → 101ms, 73% 단축 및 RPS 14% 향상</li>
+                    <li><strong>추가 기여</strong> - WebSocket 인증, 대시보드 비동기 처리, Git/PR 템플릿 도입으로 기능 안정성과 리뷰 효율 개선</li>
                 </ul>
                 <div class="highlight-box">
-                    <div class="hl-title">관리자 팀/멤버 조회 API(<code>GET /api/admin/team/members</code>) 병목 해결 및 검증</div>
-                    <div class="hl-item">· JPA Fetch Join / Bulk IN 쿼리 최적화로 150회의 N+1 단건 쿼리를 3회의 벌크 쿼리로 통합 → DB 부하 및 EC2 CPU 크레딧 고갈 동시 해결</div>
-                    <div class="hl-item">· K6 부하 테스트 검증(50 VUs) 결과, 응답 속도 377ms → 101ms (73% 단축) 및 초당 처리량(RPS) 14% 향상 증명</div>
+                    <div class="hl-title">대표 성과 - 관리자 팀/멤버 조회 API(<code>GET /api/admin/team/members</code>) 병목 해결</div>
+                    <div class="hl-item">· N+1 쿼리로 발생한 인프라 병목을 애플리케이션 구조 개선으로 해결</div>
+                    <div class="hl-item">· 응답 속도 377ms → 101ms, 73% 단축 / 초당 처리량(RPS) 14% 향상 / EC2 CPU 스로틀링 해소</div>
                 </div>
                 <div class="stack-tags">
                     <span class="stack-tag">Java 17</span><span class="stack-tag">Spring Boot</span>
@@ -396,10 +388,9 @@
                 <div class="project-role">DB 설계 담당 (DB Lead) / 근태 자동화 담당</div>
                 <div class="project-desc">의사·간호사·원무과 직군별 역할 기반 접근 제어와 Oracle DB 기반 쿼리 최적화에 집중한 병원 ERP 통합 관리 시스템</div>
                 <ul class="bullet-list">
-                    <li>ERD 설계 및 DB 단 무결성 제약조건(<code>CONSTRAINT CHK_STATUS CHECK</code>) 설정 주도</li>
-                    <li>Oracle <code>LISTAGG</code>·서브쿼리·View 활용으로 N+1 데이터 병합 및 쿼리 최적화</li>
-                    <li>LocalTime API로 출결 상태(정상/지각/조퇴/결근) 자동 판별 로직 구현</li>
-                    <li><strong>DB 병합 충돌 해결</strong> — 상태 컬럼 통일·Check 제약 강제·공통 더미 데이터 배포로 이후 충돌 0건</li>
+                    <li>ERD 설계와 <code>CHECK</code> / FK 제약조건 적용으로 데이터 무결성 기준 수립</li>
+                    <li>Oracle <code>LISTAGG</code>, 서브쿼리, View로 병원 업무 데이터 조회 쿼리 최적화</li>
+                    <li>상태 컬럼 표준화와 공통 더미 데이터 재배포로 DB 병합 충돌 문제 해결</li>
                 </ul>
                 <div class="stack-tags">
                     <span class="stack-tag">Java</span><span class="stack-tag">Spring Boot</span>
@@ -418,11 +409,9 @@
                 <div class="project-role">기획·설계·개발 전담</div>
                 <div class="project-desc">타이머·기록·알고리즘·커뮤니티를 통합한 스피드큐빙 올인원 비동기 웹 플랫폼</div>
                 <ul class="bullet-list">
-                    <li><strong>[리팩토링]</strong> setInterval 누적 오차 → <code>Date.now()</code> Delta Time 방식으로 타이머 코어 교체,
-                        0.001초 정밀 계측 구현</li>
-                    <li>Stackmat UX 이식 (idle → holding → running), WCA 규격 20-move 스크램블 생성</li>
-                    <li>VisualCube API 연동으로 CFOP 단계별 3D 알고리즘 시각화</li>
-                    <li>Zustand 도입으로 빈번한 상태 갱신 시 불필요한 리렌더링 최소화</li>
+                    <li><strong>정밀도 개선</strong> - <code>setInterval</code> 누적 오차를 <code>Date.now()</code> 기반 Delta Time 방식으로 교체해 0.001초 단위 측정 구현</li>
+                    <li>Stackmat UX 상태 머신과 WCA 규격 스크램블 생성으로 실제 사용 흐름에 가까운 타이머 구현</li>
+                    <li>VisualCube API와 Zustand를 활용해 학습용 시각화와 상태 갱신 성능 개선</li>
                 </ul>
                 <div class="stack-tags">
                     <span class="stack-tag">Java 17</span><span class="stack-tag">Spring Boot 3.4</span>

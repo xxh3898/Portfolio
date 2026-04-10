@@ -192,15 +192,49 @@
         .hero-intro {
             font-size: .95rem;
             color: var(--gray-600);
-            margin-bottom: 24px;
+            margin-bottom: 18px;
             line-height: 1.8;
+        }
+
+        .hero-summary {
+            font-size: .92rem;
+            color: var(--gray-800);
+            font-weight: 600;
+            margin-bottom: 18px;
+        }
+
+        .hero-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .hero-metric {
+            background: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
+            border: 1.5px solid var(--blue-mid);
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+
+        .hero-metric-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--blue);
+            line-height: 1.1;
+        }
+
+        .hero-metric-label {
+            font-size: .76rem;
+            color: var(--gray-600);
+            margin-top: 6px;
         }
 
         .contact-links {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
-            margin-bottom: 32px;
+            margin-bottom: 18px;
         }
 
         .contact-link {
@@ -225,6 +259,13 @@
 
         .contact-link i {
             font-size: .9rem;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 28px;
         }
 
         /* ── 핵심 역량 카드 ── */
@@ -259,6 +300,82 @@
             font-size: .8rem;
             color: var(--gray-600);
             line-height: 1.6;
+        }
+
+        .featured-highlight {
+            padding-top: 0;
+            padding-bottom: 48px;
+        }
+
+        .featured-card {
+            background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
+            border: 1.5px solid var(--blue-mid);
+            border-radius: 18px;
+            padding: 28px 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .featured-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .78rem;
+            font-weight: 700;
+            color: #1d4ed8;
+            background: var(--blue-light);
+            border-radius: 999px;
+            padding: 6px 12px;
+            margin-bottom: 14px;
+        }
+
+        .featured-title {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--navy);
+            margin-bottom: 10px;
+            letter-spacing: -.03em;
+        }
+
+        .featured-desc {
+            font-size: .94rem;
+            color: var(--gray-600);
+            line-height: 1.8;
+            margin-bottom: 18px;
+        }
+
+        .featured-points {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .featured-point {
+            background: var(--white);
+            border: 1px solid var(--gray-100);
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+
+        .featured-point-title {
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            color: var(--gray-400);
+            margin-bottom: 6px;
+        }
+
+        .featured-point-text {
+            font-size: .88rem;
+            color: var(--gray-700);
+            line-height: 1.7;
+        }
+
+        .featured-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         /* ── 기술 스택 ── */
@@ -781,6 +898,10 @@
                 grid-template-columns: 1fr;
             }
 
+            .hero-metrics {
+                grid-template-columns: 1fr;
+            }
+
             .skills-grid {
                 grid-template-columns: 1fr;
             }
@@ -796,6 +917,10 @@
             .project-footer {
                 flex-direction: column;
                 gap: 8px;
+            }
+
+            .featured-points {
+                grid-template-columns: 1fr;
             }
 
             .btn {
@@ -919,12 +1044,24 @@
                     <h1 class="hero-name">N+1 병목을 해소하여 EC2 스로틀링<br>장애를 해결한 백엔드 개발자 조치호</h1>
                     <p class="hero-sub">Java / Spring Boot</p>
                     <p class="hero-intro">
-                        단순 개발을 넘어, <strong>클라우드 인프라와 애플리케이션의 연관성</strong>을 분석해 시스템의 근본적인 병목을 해결합니다.<br>
-                        <strong>비효율적인 N+1 쿼리로 인한 EC2 리소스(CPU 크레딧) 고갈 및 응답 지연</strong> 문제를 <strong>JPA Fetch Join / Bulk IN 쿼리 최적화</strong>로 해결하여 <strong>응답 속도를 377ms에서 101ms로 73% 단축하고, 처리량을 14% 향상</strong>시켰습니다.
-                        <br>
-                        또한 직접 만든 <strong>11종의 템플릿</strong>으로 <strong>기획·개발·트러블슈팅 전 과정</strong>을 기록하며, 협업에서의 <strong>정보
-                            손실을 최소화하는 개발 방식</strong>을 지향합니다.
+                        성능 병목을 분석하고 근본 원인을 해결하는 백엔드 개발자입니다. CalmDesk 프로젝트에서 <strong>N+1 쿼리로 인한 DB 부하와 EC2 CPU 크레딧 고갈</strong> 문제를 추적해 구조를 개선했고, 수치로 검증된 결과까지 만들었습니다.
                     </p>
+                    <p class="hero-summary">문제를 찾고, 쿼리를 바꾸고, 부하 테스트로 증명하는 방식으로 일합니다.</p>
+
+                    <div class="hero-metrics">
+                        <div class="hero-metric">
+                            <div class="hero-metric-value">73%</div>
+                            <div class="hero-metric-label">응답 속도 개선<br>377ms → 101ms</div>
+                        </div>
+                        <div class="hero-metric">
+                            <div class="hero-metric-value">14%</div>
+                            <div class="hero-metric-label">초당 처리량 향상<br>K6 부하 테스트 기준</div>
+                        </div>
+                        <div class="hero-metric">
+                            <div class="hero-metric-value">150 → 3</div>
+                            <div class="hero-metric-label">N+1 단건 쿼리 축소<br>Fetch Join + Bulk IN 적용</div>
+                        </div>
+                    </div>
 
                     <!-- 연락처 링크 -->
                     <div class="contact-links">
@@ -943,26 +1080,70 @@
                         </a>
                     </div>
 
+                    <div class="hero-actions">
+                        <a href="resume.pdf" download class="btn btn-primary">
+                            <i class="fa-solid fa-file-arrow-down"></i> 이력서 PDF
+                        </a>
+                        <a href="resume.html" target="_blank" class="btn btn-outline">
+                            <i class="fa-solid fa-file-lines"></i> 이력서 보기
+                        </a>
+                        <a href="coverletter.html" target="_blank" class="btn btn-outline">
+                            <i class="fa-solid fa-pen-to-square"></i> 자기소개서 보기
+                        </a>
+                    </div>
+
                     <!-- 핵심 역량 카드 -->
                     <div class="competency-grid">
                         <div class="comp-card">
-                            <div class="comp-title">🔍 인프라 관점 병목 해결</div>
-                            <div class="comp-desc">비효율 쿼리로 인해 연쇄 발생한 <strong>EC2 자원 고갈(CPU 크레딧)</strong> 병목을 해결해 <strong>응답 속도 73% 단축 및 처리량 14% 향상</strong>을 이룬 성과</div>
+                            <div class="comp-title">🔍 성능 병목 분석</div>
+                            <div class="comp-desc">SQL 로그, 인프라 상태, 부하 테스트 결과를 연결해 병목 원인을 구체적으로 추적합니다.</div>
                         </div>
                         <div class="comp-card">
-                            <div class="comp-title">📝 문서화 중심 개발 습관</div>
-                            <div class="comp-desc">직접 제작한 11종 템플릿으로 기획부터 트러블슈팅까지 전 과정 기록</div>
+                            <div class="comp-title">🛠 근본 원인 해결</div>
+                            <div class="comp-desc">증상 완화가 아니라 쿼리 구조와 데이터 흐름을 바꿔 재발 가능성을 줄입니다.</div>
                         </div>
                         <div class="comp-card">
-                            <div class="comp-title">⚙️ 구조화된 개발 프로세스</div>
-                            <div class="comp-desc">기획서 → ERD → 아키텍처 순의 <strong>표준화된 개발 사이클</strong> 준수 및 Daily Log 기록
-                                생활화</div>
+                            <div class="comp-title">📊 수치로 검증된 개선</div>
+                            <div class="comp-desc">개선 전후를 측정해 응답 속도, 처리량, 인프라 상태 변화를 결과로 남깁니다.</div>
                         </div>
                         <div class="comp-card">
-                            <div class="comp-title">🤝 협업 가시성 확보</div>
-                            <div class="comp-desc">Git 커밋 컨벤션과 이슈 템플릿 도입으로 <strong>코드 리뷰 효율</strong>을 높이고 팀 생산성 기여</div>
+                            <div class="comp-title">🤝 협업 기준 정리</div>
+                            <div class="comp-desc">Git/PR 템플릿과 작업 기준을 정리해 리뷰 속도와 팀 작업 가시성을 높였습니다.</div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="featured-highlight">
+        <div class="container">
+            <div class="featured-card">
+                <div class="featured-kicker">대표 프로젝트 · CalmDesk</div>
+                <h2 class="featured-title">N+1 쿼리로 발생한 인프라 병목을 애플리케이션 구조 개선으로 해결했습니다.</h2>
+                <p class="featured-desc">
+                    관리자 팀/멤버 조회 API에서 발생한 지연을 추적하던 중, 단순한 응답 속도 문제가 아니라 EC2 CPU 크레딧 고갈까지 연결된 병목을 확인했습니다.
+                    JPA Fetch Join과 Bulk IN 쿼리로 조회 구조를 다시 설계해 인프라와 애플리케이션 양쪽의 부담을 함께 줄였습니다.
+                </p>
+                <div class="featured-points">
+                    <div class="featured-point">
+                        <div class="featured-point-title">Problem</div>
+                        <div class="featured-point-text">직원 50명 조회 시 150개의 단건 쿼리가 연쇄적으로 발생하며 DB 부하와 EC2 스로틀링을 유발했습니다.</div>
+                    </div>
+                    <div class="featured-point">
+                        <div class="featured-point-title">Solution</div>
+                        <div class="featured-point-text">Fetch Join과 Bulk IN 쿼리로 조회를 3개의 벌크 쿼리로 통합해 데이터 로딩 구조를 단순화했습니다.</div>
+                    </div>
+                </div>
+                <div class="featured-actions">
+                    <a class="btn btn-primary" href="#projects">
+                        <i class="fa-solid fa-arrow-down"></i> 프로젝트 상세 보기
+                    </a>
+                    <a class="btn btn-outline"
+                        href="https://github.com/Team-Code808/Docs/blob/main/%EC%9D%B4%EC%8A%88/%EB%B0%B1%EC%97%94%EB%93%9C%20CD%20%EB%B0%B0%ED%8F%AC%20%EB%B0%8F%20%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C%20%EC%84%B1%EB%8A%A5%20%EC%B5%9C%EC%A0%81%ED%99%94.md"
+                        target="_blank">
+                        <i class="fa-solid fa-fire-extinguisher"></i> 트러블슈팅 리포트
+                    </a>
                 </div>
             </div>
         </div>
