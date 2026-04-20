@@ -44,4 +44,4 @@ project: "Portfolio"
 - [[Archive/Projects/CalmDesk/CalmDesk]]
 - [[Archive/Projects/MediFlow/MediFlow]]
 - [[Projects/Cubing Hub/Cubing Hub]]
-- [[Dashboard]]
+- [Dashboard](../../Dashboard.md)
