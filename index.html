@@ -1699,163 +1699,6 @@
                     </div>
                 </div>
 
-                <!-- MediFlow -->
-                <div class="project-card green">
-                    <div class="project-header">
-                        <span class="project-name">MediFlow</span>
-                        <span class="badge team">팀 프로젝트</span>
-                        <span class="badge role">DB 관리자</span>
-                    </div>
-                    <div class="project-meta">2025.10.23 - 2025.11.19 &nbsp;·&nbsp; 6인 Full Stack · W3C</div>
-                    <p class="project-desc">
-                        수기·엑셀 기반 병원 관리의 비효율을 해결하기 위한 <strong>통합 병원 ERP 시스템</strong>.<br>
-                        예약, 진료, 근태 관리를 포함한 병원 운영 전 영역을 디지털화한 프로젝트입니다.
-                    </p>
-
-                    <!-- 프로젝트 스크린샷 -->
-                    <div class="project-screenshots">
-                        <div class="screenshot-slider" id="mediflow-slider">
-                            <div class="screenshot-track">
-                                <img src="assets/images/mediflow_main.png" alt="MediFlow 메인페이지" class="screenshot-img">
-                                <img src="assets/images/mediflow_dashboard.png" alt="MediFlow ERP 대시보드"
-                                    class="screenshot-img">
-                                <img src="assets/images/mediflow_erp.png" alt="MediFlow ERP 예약관리"
-                                    class="screenshot-img">
-                            </div>
-                            <button class="slide-btn prev" onclick="slideMove('mediflow-slider', -1)">&#8249;</button>
-                            <button class="slide-btn next" onclick="slideMove('mediflow-slider', 1)">&#8250;</button>
-                            <div class="slide-dots">
-                                <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="project-label">아키텍처</div>
-                    <ul class="feature-list">
-                        <li class="feature-item">
-                            <div>
-                                <strong>Architecture</strong><br>
-                                <code>JSP / JSTL</code> ➡️ <code>Spring Boot API</code> ➡️ <code>Oracle DB</code>
-                            </div>
-                        </li>
-                    </ul>
-
-                    <div class="project-label">본인 담당 기능</div>
-                    <ul class="feature-list">
-                        <li class="feature-item">
-                            <div>
-                                <strong>DB 모델링 및 설계</strong><br>
-                                ERD 설계부터 <code>CONSTRAINT FK_...</code>,
-                                <code>CONSTRAINT CHK_STATUS CHECK (STATUS IN ('Y', 'N', 'R'))</code> 등 데이터베이스 단의 무결성 검증
-                                설정 주도
-                            </div>
-                        </li>
-                        <li class="feature-item">
-                            <div>
-                                <strong>쿼리 최적화</strong><br>
-                                Oracle <code>LISTAGG(name, ',') WITHIN GROUP (ORDER BY id)</code> 및 서브쿼리 활용으로 데이터 병합 과정의 N+1 문제
-                                해결. View 도입으로 비즈니스별 복잡한 Join 성능 향상 및 SQL 복잡도 감소
-                            </div>
-                        </li>
-                        <li class="feature-item">
-                            <div>
-                                <strong>근태 자동화</strong><br>
-                                LocalTime API로 출결 상태(정상/지각/조퇴/결근) 자동 판별 로직 구현
-                            </div>
-                        </li>
-                    </ul>
-
-                    <div class="project-label">주요 트러블슈팅</div>
-                    <ul class="feature-list">
-                        <li class="feature-item">
-                            <div>
-                                <strong>[리팩토링] 데이터 무결성 확보 및 DB 병합 충돌 해결</strong>
-                                <div class="ts-step">
-                                    <div class="ts-step-title">1) 문제점 및 원인 분석</div>
-                                    <div class="ts-step-content">로컬 환경 개발 시 상태값 검증 기준(A 개발자는 '1,2,3', B 개발자는 'Y,N,R'
-                                        기반)이 통일되지 않아 DB 병합 시 지속적인 데이터 충돌 및 정합성 오류가 발생했습니다. 문제 원인이 단순 문서 부재가 아닌 <strong>명시적 DB
-                                            제약조건 적용 누락</strong>에 있음을 파악했습니다.</div>
-                                </div>
-                                <div class="ts-step">
-                                    <div class="ts-step-title">2) 개선/해결 방안</div>
-                                    <div class="ts-step-content">상태 컬럼 타입을 통일한 뒤
-                                        <code>CONSTRAINT CHK_STATUS CHECK (STATUS IN ('Y', 'N', 'R'))</code>와 같은 DB 단
-                                        CHECK 제약조건을 적용했습니다. 이후 공통 더미 데이터를 배포해 팀 전체 개발 환경을 동기화하고, 설계 단계부터 데이터 무결성 기준을 확립해
-                                        구조적 품질을 높였습니다.
-                                    </div>
-                                </div>
-                                <div class="ts-step">
-                                    <div class="ts-step-title">3) 결과/성과</div>
-                                    <div class="ts-step-content"><strong>팀 전체 개발 환경을 동기화하고, 데이터 무결성이 훼손될 가능성을 사전에 차단</strong>했습니다.
-                                        이후 DB 병합 충돌은 0건으로 유지됐습니다.</div>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-
-                    <div class="project-label">기술 스택</div>
-                    <div class="stack-category">
-                        <div class="stack-category-title">Back-end</div>
-                        <div class="stack-tags">
-                            <span class="stack-tag">Java</span>
-                            <span class="stack-tag">Spring Boot</span>
-                            <span class="stack-tag">MyBatis</span>
-                            <span class="stack-tag">Gradle</span>
-                        </div>
-                    </div>
-                    <div class="stack-category">
-                        <div class="stack-category-title">Front-end</div>
-                        <div class="stack-tags">
-                            <span class="stack-tag">JSP</span>
-                            <span class="stack-tag">JSTL</span>
-                            <span class="stack-tag">jQuery</span>
-                            <span class="stack-tag">Axios</span>
-                        </div>
-                    </div>
-                    <div class="stack-category">
-                        <div class="stack-category-title">DB</div>
-                        <div class="stack-tags">
-                            <span class="stack-tag">Oracle</span>
-                        </div>
-                    </div>
-                    <div class="stack-category">
-                        <div class="stack-category-title">Tool</div>
-                        <div class="stack-tags">
-                            <span class="stack-tag">Git</span>
-                            <span class="stack-tag">GitHub</span>
-                            <span class="stack-tag">Notion</span>
-                        </div>
-                    </div>
-
-                    <div class="project-label">참여 소감</div>
-                    <div class="impression-box">
-                        <div class="impression-row">
-                            <span class="impression-label">잘된 점</span>
-                            <span>DB 관리자로서 ERD 설계부터 제약조건 강제까지 데이터 무결성 전 과정을 주도하고, Oracle의 <code>LISTAGG</code>와 View
-                                도입으로
-                                복잡한 쿼리 성능을 구조적으로 개선한 점</span>
-                        </div>
-                        <div class="impression-row">
-                            <span class="impression-label">아쉬운 점</span>
-                            <span>JSP 기반 렌더링이다 보니 UI/UX 측면에서 동적 인터랙션 구현에 한계가 있었던 점</span>
-                        </div>
-                        <div class="impression-row">
-                            <span class="impression-label">보완할 점</span>
-                            <span>다음 프로젝트에서 React 등 SPA 프레임워크로 전환하여 사용자 경험을 개선하는 방향으로 발전 예정</span>
-                        </div>
-                    </div>
-
-                    <div class="project-footer">
-                        <a class="btn btn-primary" href="https://github.com/Team-W3C/W3C-Project" target="_blank">
-                            <i class="fa-brands fa-github"></i> GitHub
-                        </a>
-                        <a class="btn btn-outline" href="https://github.com/Team-W3C/W3C-Project#readme"
-                            target="_blank">
-                            <i class="fa-solid fa-book"></i> README
-                        </a>
-                    </div>
-                </div>
-
                 <!-- Cubing Hub -->
                 <div class="project-card amber">
                     <div class="project-header">
@@ -2055,6 +1898,163 @@
                             <i class="fa-solid fa-globe"></i> Service
                         </a>
                         <a class="btn btn-outline" href="https://github.com/xxh3898/cubing-hub#readme" target="_blank">
+                            <i class="fa-solid fa-book"></i> README
+                        </a>
+                    </div>
+                </div>
+
+                <!-- MediFlow -->
+                <div class="project-card green">
+                    <div class="project-header">
+                        <span class="project-name">MediFlow</span>
+                        <span class="badge team">팀 프로젝트</span>
+                        <span class="badge role">DB 관리자</span>
+                    </div>
+                    <div class="project-meta">2025.10.23 - 2025.11.19 &nbsp;·&nbsp; 6인 Full Stack · W3C</div>
+                    <p class="project-desc">
+                        수기·엑셀 기반 병원 관리의 비효율을 해결하기 위한 <strong>통합 병원 ERP 시스템</strong>.<br>
+                        예약, 진료, 근태 관리를 포함한 병원 운영 전 영역을 디지털화한 프로젝트입니다.
+                    </p>
+
+                    <!-- 프로젝트 스크린샷 -->
+                    <div class="project-screenshots">
+                        <div class="screenshot-slider" id="mediflow-slider">
+                            <div class="screenshot-track">
+                                <img src="assets/images/mediflow_main.png" alt="MediFlow 메인페이지" class="screenshot-img">
+                                <img src="assets/images/mediflow_dashboard.png" alt="MediFlow ERP 대시보드"
+                                    class="screenshot-img">
+                                <img src="assets/images/mediflow_erp.png" alt="MediFlow ERP 예약관리"
+                                    class="screenshot-img">
+                            </div>
+                            <button class="slide-btn prev" onclick="slideMove('mediflow-slider', -1)">&#8249;</button>
+                            <button class="slide-btn next" onclick="slideMove('mediflow-slider', 1)">&#8250;</button>
+                            <div class="slide-dots">
+                                <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="project-label">아키텍처</div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div>
+                                <strong>Architecture</strong><br>
+                                <code>JSP / JSTL</code> ➡️ <code>Spring Boot API</code> ➡️ <code>Oracle DB</code>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="project-label">본인 담당 기능</div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div>
+                                <strong>DB 모델링 및 설계</strong><br>
+                                ERD 설계부터 <code>CONSTRAINT FK_...</code>,
+                                <code>CONSTRAINT CHK_STATUS CHECK (STATUS IN ('Y', 'N', 'R'))</code> 등 데이터베이스 단의 무결성 검증
+                                설정 주도
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div>
+                                <strong>쿼리 최적화</strong><br>
+                                Oracle <code>LISTAGG(name, ',') WITHIN GROUP (ORDER BY id)</code> 및 서브쿼리 활용으로 데이터 병합 과정의 N+1 문제
+                                해결. View 도입으로 비즈니스별 복잡한 Join 성능 향상 및 SQL 복잡도 감소
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div>
+                                <strong>근태 자동화</strong><br>
+                                LocalTime API로 출결 상태(정상/지각/조퇴/결근) 자동 판별 로직 구현
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="project-label">주요 트러블슈팅</div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div>
+                                <strong>[리팩토링] 데이터 무결성 확보 및 DB 병합 충돌 해결</strong>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">1) 문제점 및 원인 분석</div>
+                                    <div class="ts-step-content">로컬 환경 개발 시 상태값 검증 기준(A 개발자는 '1,2,3', B 개발자는 'Y,N,R'
+                                        기반)이 통일되지 않아 DB 병합 시 지속적인 데이터 충돌 및 정합성 오류가 발생했습니다. 문제 원인이 단순 문서 부재가 아닌 <strong>명시적 DB
+                                            제약조건 적용 누락</strong>에 있음을 파악했습니다.</div>
+                                </div>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">2) 개선/해결 방안</div>
+                                    <div class="ts-step-content">상태 컬럼 타입을 통일한 뒤
+                                        <code>CONSTRAINT CHK_STATUS CHECK (STATUS IN ('Y', 'N', 'R'))</code>와 같은 DB 단
+                                        CHECK 제약조건을 적용했습니다. 이후 공통 더미 데이터를 배포해 팀 전체 개발 환경을 동기화하고, 설계 단계부터 데이터 무결성 기준을 확립해
+                                        구조적 품질을 높였습니다.
+                                    </div>
+                                </div>
+                                <div class="ts-step">
+                                    <div class="ts-step-title">3) 결과/성과</div>
+                                    <div class="ts-step-content"><strong>팀 전체 개발 환경을 동기화하고, 데이터 무결성이 훼손될 가능성을 사전에 차단</strong>했습니다.
+                                        이후 DB 병합 충돌은 0건으로 유지됐습니다.</div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="project-label">기술 스택</div>
+                    <div class="stack-category">
+                        <div class="stack-category-title">Back-end</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">Java</span>
+                            <span class="stack-tag">Spring Boot</span>
+                            <span class="stack-tag">MyBatis</span>
+                            <span class="stack-tag">Gradle</span>
+                        </div>
+                    </div>
+                    <div class="stack-category">
+                        <div class="stack-category-title">Front-end</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">JSP</span>
+                            <span class="stack-tag">JSTL</span>
+                            <span class="stack-tag">jQuery</span>
+                            <span class="stack-tag">Axios</span>
+                        </div>
+                    </div>
+                    <div class="stack-category">
+                        <div class="stack-category-title">DB</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">Oracle</span>
+                        </div>
+                    </div>
+                    <div class="stack-category">
+                        <div class="stack-category-title">Tool</div>
+                        <div class="stack-tags">
+                            <span class="stack-tag">Git</span>
+                            <span class="stack-tag">GitHub</span>
+                            <span class="stack-tag">Notion</span>
+                        </div>
+                    </div>
+
+                    <div class="project-label">참여 소감</div>
+                    <div class="impression-box">
+                        <div class="impression-row">
+                            <span class="impression-label">잘된 점</span>
+                            <span>DB 관리자로서 ERD 설계부터 제약조건 강제까지 데이터 무결성 전 과정을 주도하고, Oracle의 <code>LISTAGG</code>와 View
+                                도입으로
+                                복잡한 쿼리 성능을 구조적으로 개선한 점</span>
+                        </div>
+                        <div class="impression-row">
+                            <span class="impression-label">아쉬운 점</span>
+                            <span>JSP 기반 렌더링이다 보니 UI/UX 측면에서 동적 인터랙션 구현에 한계가 있었던 점</span>
+                        </div>
+                        <div class="impression-row">
+                            <span class="impression-label">보완할 점</span>
+                            <span>다음 프로젝트에서 React 등 SPA 프레임워크로 전환하여 사용자 경험을 개선하는 방향으로 발전 예정</span>
+                        </div>
+                    </div>
+
+                    <div class="project-footer">
+                        <a class="btn btn-primary" href="https://github.com/Team-W3C/W3C-Project" target="_blank">
+                            <i class="fa-brands fa-github"></i> GitHub
+                        </a>
+                        <a class="btn btn-outline" href="https://github.com/Team-W3C/W3C-Project#readme"
+                            target="_blank">
                             <i class="fa-solid fa-book"></i> README
                         </a>
                     </div>
