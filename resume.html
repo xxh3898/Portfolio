@@ -317,7 +317,7 @@
             <div class="edu-row">
                 <div>
                     <span class="edu-name">KH 정보교육원</span>
-                    <span class="edu-detail"> &nbsp;AWS 클라우드 기반 DevOps 개발자 양성과정 (Java·Spring · React · Oracle DB ·
+                    <span class="edu-detail"> &nbsp;AWS 클라우드 기반 DevOps 개발자 양성 과정 (Java·Spring · React · Oracle DB ·
                         AWS)</span>
                 </div>
                 <span class="edu-period">2025.07 - 2026.03</span>
@@ -329,19 +329,19 @@
             <div class="section-title">Technical Skills</div>
             <div class="skill-grid">
                 <span class="skill-label">Backend</span>
-                <span class="skill-value"><strong>Java 17</strong> · <strong>Spring Boot</strong> · <strong>Spring Data JPA</strong> · Spring Security · WebSocket (STOMP) · SSE · JWT · Swagger · MyBatis</span>
+                <span class="skill-value"><strong>Java 17</strong> · <strong>Spring Boot</strong> · <strong>Spring Data JPA</strong> · Spring Security · QueryDSL · JWT · Swagger · MyBatis · WebSocket (STOMP) · SSE</span>
 
                 <span class="skill-label">Database</span>
                 <span class="skill-value"><strong>MySQL</strong> · Redis · Oracle</span>
 
                 <span class="skill-label">Infra / DevOps</span>
-                <span class="skill-value"><strong>AWS</strong> (EC2 · RDS · S3 · CloudFront) · Docker · Nginx · GitHub Actions</span>
+                <span class="skill-value"><strong>AWS</strong> (EC2 · RDS · S3 · CloudFront) · Docker · Docker Compose · Nginx · GitHub Actions</span>
 
                 <span class="skill-label">Frontend</span>
-                <span class="skill-value">React 19 · Zustand · Axios · JavaScript · HTML/CSS</span>
+                <span class="skill-value">React 19 · Vite · React Router · Zustand · Axios · JavaScript · HTML/CSS</span>
 
                 <span class="skill-label">Testing / Tools</span>
-                <span class="skill-value"><strong>Git</strong> · K6 · Postman · GitHub · IntelliJ IDEA · Notion · Slack · Figma</span>
+                <span class="skill-value"><strong>Git</strong> · Testcontainers · Spring REST Docs · JaCoCo · Vitest · k6 · Postman · GitHub · IntelliJ IDEA</span>
             </div>
         </section>
 
@@ -360,7 +360,7 @@
                 <ul class="bullet-list">
                     <li><strong>문제 분석</strong> - 관리자 팀/멤버 조회 API에서 N+1 쿼리로 인한 DB 부하와 EC2 CPU 크레딧 고갈 원인을 추적</li>
                     <li><strong>근본 해결</strong> - JPA Fetch Join과 Bulk IN 쿼리로 150회의 단건 쿼리를 3회의 벌크 쿼리로 통합</li>
-                    <li><strong>검증 결과</strong> - K6 부하 테스트 기준 응답 속도 377ms → 101ms, 73% 단축 및 RPS 14% 향상</li>
+                    <li><strong>검증 결과</strong> - k6 부하 테스트 기준 응답 속도 377ms → 101ms, 73% 단축 및 RPS 14% 향상</li>
                     <li><strong>추가 기여</strong> - WebSocket 인증, 대시보드 비동기 처리, Git/PR 템플릿 도입으로 기능 안정성과 리뷰 효율 개선</li>
                 </ul>
                 <div class="highlight-box">
@@ -404,20 +404,23 @@
             <div class="project">
                 <div class="project-header">
                     <span class="project-name">Cubing Hub</span>
-                    <span class="project-meta">2025.10 (3주) &nbsp;|&nbsp; 1인 개인 프로젝트</span>
+                    <span class="project-meta">2026.03 - 2026.04 &nbsp;|&nbsp; 1인 개인 프로젝트</span>
                 </div>
-                <div class="project-role">기획·설계·개발 전담</div>
-                <div class="project-desc">타이머·기록·알고리즘·커뮤니티를 통합한 스피드큐빙 올인원 비동기 웹 플랫폼</div>
+                <div class="project-role">기획·설계·개발·배포·검증 전담</div>
+                <div class="project-desc">큐빙 기록·학습·랭킹·커뮤니티를 통합하고 Redis 랭킹, 인증, 테스트/문서화, AWS 배포까지 수행한 1인 풀스택 웹 플랫폼</div>
                 <ul class="bullet-list">
-                    <li><strong>정밀도 개선</strong> - <code>setInterval</code> 누적 오차를 <code>Date.now()</code> 기반 Delta Time 방식으로 교체해 0.001초 단위 측정 구현</li>
-                    <li>Stackmat UX 상태 머신과 WCA 규격 스크램블 생성으로 실제 사용 흐름에 가까운 타이머 구현</li>
-                    <li>VisualCube API와 Zustand를 활용해 학습용 시각화와 상태 갱신 성능 개선</li>
+                    <li><strong>랭킹 성능 개선</strong> - MySQL V1 기준선을 Redis ZSET 읽기 모델로 분리해 300,000 PB 기준 평균 응답 시간 7,245.23ms → 21.10ms로 개선</li>
+                    <li><strong>인증 구조</strong> - JWT Access Token, HttpOnly Refresh Cookie, Redis Refresh Token Rotation, Access Token blacklist 기반 세션 무효화 구현</li>
+                    <li><strong>품질 검증</strong> - Testcontainers 통합 테스트, Spring REST Docs, backend JaCoCo instruction/branch 기준 누락 0건, frontend Vitest 커버리지 100% 확인</li>
+                    <li><strong>배포/운영</strong> - S3·CloudFront 프론트, EC2·Nginx·Spring Boot·Redis·RDS 백엔드 분리 배포 및 SMTP/S3/브라우저 수동 QA 완료</li>
                 </ul>
                 <div class="stack-tags">
-                    <span class="stack-tag">Java 17</span><span class="stack-tag">Spring Boot 3.4</span>
-                    <span class="stack-tag">JPA</span><span class="stack-tag">MySQL</span>
-                    <span class="stack-tag">React 19</span><span class="stack-tag">Zustand</span>
-                    <span class="stack-tag">Styled-Components</span>
+                    <span class="stack-tag">Java 17</span><span class="stack-tag">Spring Boot 3.5.12</span>
+                    <span class="stack-tag">Spring Security</span><span class="stack-tag">JPA</span>
+                    <span class="stack-tag">QueryDSL</span><span class="stack-tag">MySQL</span>
+                    <span class="stack-tag">Redis</span><span class="stack-tag">React 19</span>
+                    <span class="stack-tag">Vite</span><span class="stack-tag">AWS</span>
+                    <span class="stack-tag">Docker</span><span class="stack-tag">GitHub Actions</span>
                 </div>
             </div>
         </section>
