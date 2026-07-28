@@ -80,3 +80,55 @@ jobs:
             printf -- "- Image: \`%s:%s\`\n" "${IMAGE_NAME}" "${GITHUB_SHA}"
             printf -- "- Digest: \`%s\`\n" "${IMAGE_DIGEST}"
           } >>"${GITHUB_STEP_SUMMARY}"
+
+  deploy:
+    name: Deploy to home-mini
+    if: github.ref == 'refs/heads/main'
+    needs:
+      - publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+
+    steps:
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@780049a30b6ff5c378a9e7b389d15ece7a204888 # v4.1.3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: portfolio-deploy-${{ github.run_id }}-${{ github.run_attempt }}
+          ping: home-mini
+
+      - name: Configure restricted SSH identity
+        env:
+          HOME_MINI_SSH_KEY: ${{ secrets.HOME_MINI_SSH_KEY }}
+          HOME_MINI_KNOWN_HOSTS: ${{ secrets.HOME_MINI_KNOWN_HOSTS }}
+        run: |
+          test -n "${HOME_MINI_SSH_KEY}"
+          test -n "${HOME_MINI_KNOWN_HOSTS}"
+
+          umask 077
+          mkdir -p "${HOME}/.ssh"
+          printf '%s\n' "${HOME_MINI_SSH_KEY}" >"${HOME}/.ssh/id_ed25519_home_mini_ci"
+          printf '%s\n' "${HOME_MINI_KNOWN_HOSTS}" >"${HOME}/.ssh/known_hosts"
+
+          ssh-keygen -y -f "${HOME}/.ssh/id_ed25519_home_mini_ci" >/dev/null
+          ssh-keygen -lf "${HOME}/.ssh/known_hosts" >/dev/null
+
+      - name: Deploy published image
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "${GHCR_TOKEN}" \
+            | ssh \
+                -F /dev/null \
+                -i "${HOME}/.ssh/id_ed25519_home_mini_ci" \
+                -o BatchMode=yes \
+                -o IdentitiesOnly=yes \
+                -o StrictHostKeyChecking=yes \
+                homeserver@home-mini \
+                "deploy-portfolio ${GITHUB_SHA} ${GITHUB_ACTOR}"
