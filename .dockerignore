@@ -1,0 +1,12 @@
+**
+
+!Dockerfile
+!nginx.conf
+!index.html
+!resume.html
+!coverletter.html
+!api-spec.html
+!resume.pdf
+!assets/
+!assets/images/
+!assets/images/**
