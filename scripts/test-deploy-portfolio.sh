@@ -115,6 +115,23 @@ test -f "${state_file}"
 test -L "${app_dir}/runtime-config/current"
 test ! -e "${app_dir}/runtime-config/pending"
 
+/bin/mv "${state_file}" "${state_file}.missing"
+set +e
+run_deploy \
+  "${APP_DIGEST_TWO}" \
+  "${REVISION_TWO}" \
+  update \
+  "${CONFIG_DIGEST_TWO}" \
+  test-user \
+  >/dev/null 2>&1
+missing_state_exit_code="$?"
+set -e
+if [[ "${missing_state_exit_code}" -ne 65 ]]; then
+  printf 'Deployment with a current pointer but missing state must fail\n' >&2
+  exit 1
+fi
+/bin/mv "${state_file}.missing" "${state_file}"
+
 /bin/ln -s missing-pending "${app_dir}/runtime-config/pending"
 set +e
 run_deploy \

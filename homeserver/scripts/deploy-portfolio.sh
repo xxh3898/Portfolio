@@ -121,7 +121,12 @@ if [[ "${recovery_mode}" == false ]] \
 then
   fail "an incomplete runtime config transaction requires recovery" 75
 fi
-if [[ "${legacy_mode}" == true && -e "${RUNTIME_CONFIG_STATE}" ]]; then
+if [[ "${legacy_mode}" == true ]] \
+  && {
+    [[ -e "${RUNTIME_CONFIG_STATE}" || -L "${RUNTIME_CONFIG_STATE}" ]] \
+      || [[ -e "${RUNTIME_CONFIG_CURRENT}" || -L "${RUNTIME_CONFIG_CURRENT}" ]];
+  }
+then
   fail "legacy deployment is disabled after runtime config state initialization" 75
 fi
 
@@ -674,6 +679,12 @@ else
   current_config_revision="$(read_state_value RUNTIME_CONFIG_REVISION)"
   current_config_compose_sha256="$(read_state_value RUNTIME_CONFIG_COMPOSE_SHA256)"
   current_state_image="$(read_state_value APPLICATION_IMAGE)"
+
+  if [[ ! -e "${RUNTIME_CONFIG_STATE}" && ! -L "${RUNTIME_CONFIG_STATE}" ]] \
+    && [[ -e "${RUNTIME_CONFIG_CURRENT}" || -L "${RUNTIME_CONFIG_CURRENT}" ]]
+  then
+    fail "runtime config state is missing while the current release pointer exists"
+  fi
 
   if [[ -e "${RUNTIME_CONFIG_STATE}" || -L "${RUNTIME_CONFIG_STATE}" ]]; then
     if [[ ! -f "${RUNTIME_CONFIG_STATE}" || -L "${RUNTIME_CONFIG_STATE}" ]] \
