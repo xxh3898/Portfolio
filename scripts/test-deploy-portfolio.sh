@@ -110,6 +110,15 @@ pending_file="${app_dir}/runtime-config/pending"
 printf 'PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_THREE}" \
   >"${app_dir}/.env"
 
+set +e
+run_deploy "${APP_DIGEST_ONE}" test-user >/dev/null 2>&1
+legacy_pending_exit_code="$?"
+set -e
+if [[ "${legacy_pending_exit_code}" -ne 75 || ! -f "${pending_file}" ]]; then
+  printf 'Legacy Portfolio deploy must preserve and reject pending transaction\n' >&2
+  exit 1
+fi
+
 run_recovery
 
 test ! -e "${pending_file}"
