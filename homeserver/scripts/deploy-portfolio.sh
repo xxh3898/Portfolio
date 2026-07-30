@@ -300,6 +300,8 @@ config = json.load(sys.stdin)
 expected_image = sys.argv[1]
 services = config.get("services", {})
 networks = config.get("networks", {})
+if config.get("name") != "portfolio":
+    raise SystemExit("Compose project name must remain portfolio")
 if set(services) != {"portfolio"}:
     raise SystemExit("unexpected Portfolio service set")
 service = services["portfolio"]

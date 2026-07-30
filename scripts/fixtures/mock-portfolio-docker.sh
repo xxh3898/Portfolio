@@ -78,8 +78,10 @@ case "${command_name}" in
     fi
     if [[ "${arguments}" == *" --format json "* ]]; then
       rendered_image="${FAKE_RENDER_IMAGE:-${PORTFOLIO_IMAGE}}"
+      project_name="${FAKE_RENDER_PROJECT_NAME:-portfolio}"
       printf \
-        '{"services":{"portfolio":{"image":"%s","networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":{"test":["CMD","true"]}}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
+        '{"name":"%s","services":{"portfolio":{"image":"%s","networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":{"test":["CMD","true"]}}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
+        "${project_name}" \
         "${rendered_image}"
     elif [[ "${arguments}" == *" ps --status running --services "* ]]; then
       printf 'portfolio\n'

@@ -55,6 +55,7 @@ run_deploy() {
         FAKE_FAIL_CP="${FAKE_FAIL_CP:-false}" \
         FAKE_FAIL_UP="${FAKE_FAIL_UP:-false}" \
         FAKE_RENDER_IMAGE="${FAKE_RENDER_IMAGE:-}" \
+        FAKE_RENDER_PROJECT_NAME="${FAKE_RENDER_PROJECT_NAME:-}" \
         FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN="${FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN:-false}" \
         /bin/bash "${test_script}" "$@"
 }
@@ -212,6 +213,21 @@ if [[ "${recovery_exit_code}" -ne 65 || ! -f "${pending_file}" ]]; then
   exit 1
 fi
 /bin/rm -f -- "${pending_file}"
+
+set +e
+FAKE_RENDER_PROJECT_NAME=unexpected \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+wrong_project_exit_code="$?"
+set -e
+if [[ "${wrong_project_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a different Compose project name must fail\n' >&2
+  exit 1
+fi
 
 set +e
 FAKE_RENDER_IMAGE=ghcr.io/xxh3898/portfolio@sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff \
