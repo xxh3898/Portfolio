@@ -196,6 +196,19 @@ if [[ "${legacy_pending_exit_code}" -ne 75 || ! -f "${pending_file}" ]]; then
   exit 1
 fi
 
+/bin/mv "${state_file}" "${state_file}.real"
+/bin/ln -s "$(/usr/bin/basename "${state_file}.real")" "${state_file}"
+set +e
+run_recovery >/dev/null 2>&1
+symlink_state_recovery_exit_code="$?"
+set -e
+if [[ "${symlink_state_recovery_exit_code}" -ne 65 || ! -f "${pending_file}" ]]; then
+  printf 'Recovery with a symlink state must fail and preserve pending\n' >&2
+  exit 1
+fi
+/bin/rm -f -- "${state_file}"
+/bin/mv "${state_file}.real" "${state_file}"
+
 run_recovery
 
 test ! -e "${pending_file}"
