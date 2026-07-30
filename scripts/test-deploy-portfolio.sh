@@ -115,6 +115,22 @@ test -f "${state_file}"
 test -L "${app_dir}/runtime-config/current"
 test ! -e "${app_dir}/runtime-config/pending"
 
+/bin/ln -s missing-pending "${app_dir}/runtime-config/pending"
+set +e
+run_deploy \
+  "${APP_DIGEST_TWO}" \
+  "${REVISION_TWO}" \
+  keep \
+  test-user \
+  >/dev/null 2>&1
+dangling_pending_exit_code="$?"
+set -e
+if [[ "${dangling_pending_exit_code}" -ne 75 ]]; then
+  printf 'Deployment with a dangling pending symlink must require recovery\n' >&2
+  exit 1
+fi
+/bin/rm -f -- "${app_dir}/runtime-config/pending"
+
 set +e
 run_deploy "${APP_DIGEST_TWO}" test-user >/dev/null 2>&1
 legacy_after_v2_exit_code="$?"

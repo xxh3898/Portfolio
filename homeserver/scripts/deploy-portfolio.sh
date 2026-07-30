@@ -116,7 +116,9 @@ if [[ ! -f "${LEGACY_COMPOSE_FILE}" || ! -f "${ENV_FILE}" ]]; then
   fail "production Compose configuration is incomplete" 66
 fi
 
-if [[ "${recovery_mode}" == false && -e "${RUNTIME_CONFIG_PENDING}" ]]; then
+if [[ "${recovery_mode}" == false ]] \
+  && [[ -e "${RUNTIME_CONFIG_PENDING}" || -L "${RUNTIME_CONFIG_PENDING}" ]]
+then
   fail "an incomplete runtime config transaction requires recovery" 75
 fi
 if [[ "${legacy_mode}" == true && -e "${RUNTIME_CONFIG_STATE}" ]]; then
