@@ -331,7 +331,12 @@ if (
     or service.get("devices")
 ):
     raise SystemExit("Portfolio must not override image user or add privileges")
-if service.get("volumes") or service.get("configs") or service.get("secrets"):
+if (
+    service.get("volumes")
+    or service.get("volumes_from")
+    or service.get("configs")
+    or service.get("secrets")
+):
     raise SystemExit("Portfolio must serve only image-owned content")
 if service.get("command") is not None or service.get("entrypoint") is not None:
     raise SystemExit("Portfolio must not override the image process")

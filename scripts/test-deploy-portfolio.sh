@@ -64,6 +64,7 @@ run_deploy() {
         FAKE_RENDER_SECURITY_OPT_JSON="${FAKE_RENDER_SECURITY_OPT_JSON:-}" \
         FAKE_RENDER_TMPFS_JSON="${FAKE_RENDER_TMPFS_JSON:-}" \
         FAKE_RENDER_USER_OVERRIDE="${FAKE_RENDER_USER_OVERRIDE:-}" \
+        FAKE_RENDER_VOLUMES_FROM_JSON="${FAKE_RENDER_VOLUMES_FROM_JSON:-}" \
         FAKE_RENDER_WEB_PROFILE="${FAKE_RENDER_WEB_PROFILE:-false}" \
         FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN="${FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN:-false}" \
         FAKE_SERVICE_HEALTH="${FAKE_SERVICE_HEALTH:-healthy}" \
@@ -424,6 +425,21 @@ lifecycle_hook_exit_code="$?"
 set -e
 if [[ "${lifecycle_hook_exit_code}" -ne 1 ]]; then
   printf 'Runtime config with a privileged lifecycle hook must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_VOLUMES_FROM_JSON='["container:site-content:ro"]' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+volumes_from_exit_code="$?"
+set -e
+if [[ "${volumes_from_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with volumes_from must fail\n' >&2
   exit 1
 fi
 
