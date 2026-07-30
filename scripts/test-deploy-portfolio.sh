@@ -58,6 +58,7 @@ run_deploy() {
         FAKE_FAIL_UP="${FAKE_FAIL_UP:-false}" \
         FAKE_RENDER_IMAGE="${FAKE_RENDER_IMAGE:-}" \
         FAKE_RENDER_PROJECT_NAME="${FAKE_RENDER_PROJECT_NAME:-}" \
+        FAKE_RENDER_POST_START_JSON="${FAKE_RENDER_POST_START_JSON:-}" \
         FAKE_RENDER_RESTART_POLICY="${FAKE_RENDER_RESTART_POLICY:-}" \
         FAKE_RENDER_SCALE="${FAKE_RENDER_SCALE:-}" \
         FAKE_RENDER_SECURITY_OPT_JSON="${FAKE_RENDER_SECURITY_OPT_JSON:-}" \
@@ -408,6 +409,21 @@ unsafe_security_opt_exit_code="$?"
 set -e
 if [[ "${unsafe_security_opt_exit_code}" -ne 1 ]]; then
   printf 'Runtime config with an extra security option must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_POST_START_JSON='[{"command":["id"],"user":"root","privileged":true}]' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+lifecycle_hook_exit_code="$?"
+set -e
+if [[ "${lifecycle_hook_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a privileged lifecycle hook must fail\n' >&2
   exit 1
 fi
 
