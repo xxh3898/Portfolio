@@ -333,6 +333,8 @@ if (
     raise SystemExit("Portfolio must not override image user or add privileges")
 if service.get("volumes") or service.get("configs") or service.get("secrets"):
     raise SystemExit("Portfolio must serve only image-owned content")
+if service.get("command") or service.get("entrypoint"):
+    raise SystemExit("Portfolio must not override the image process")
 if service.get("tmpfs") != ["/tmp:size=64m,mode=1777"]:
     raise SystemExit("Portfolio tmpfs contract is invalid")
 if service.get("scale", 1) != 1:
