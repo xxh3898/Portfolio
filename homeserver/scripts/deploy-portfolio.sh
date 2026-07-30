@@ -329,6 +329,7 @@ if (
     or service.get("privileged") is True
     or service.get("cap_add")
     or service.get("devices")
+    or service.get("use_api_socket") is True
 ):
     raise SystemExit("Portfolio must not override image user or add privileges")
 if (

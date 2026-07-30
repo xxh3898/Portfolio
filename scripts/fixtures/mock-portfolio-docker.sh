@@ -103,8 +103,9 @@ case "${command_name}" in
       security_opt_json="${FAKE_RENDER_SECURITY_OPT_JSON:-[\"no-new-privileges:true\"]}"
       post_start_json="${FAKE_RENDER_POST_START_JSON:-null}"
       volumes_from_json="${FAKE_RENDER_VOLUMES_FROM_JSON:-null}"
+      use_api_socket="${FAKE_RENDER_USE_API_SOCKET:-false}"
       printf \
-        '{"name":"%s","services":{"portfolio":{"image":"%s","restart":"%s","user":"%s","scale":%s,"profiles":%s,"post_start":%s,"volumes_from":%s,"networks":{"edge":null},"read_only":true,"init":true,"security_opt":%s,"tmpfs":%s,"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
+        '{"name":"%s","services":{"portfolio":{"image":"%s","restart":"%s","user":"%s","scale":%s,"profiles":%s,"post_start":%s,"volumes_from":%s,"use_api_socket":%s,"networks":{"edge":null},"read_only":true,"init":true,"security_opt":%s,"tmpfs":%s,"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
         "${project_name}" \
         "${rendered_image}" \
         "${restart_policy}" \
@@ -113,6 +114,7 @@ case "${command_name}" in
         "${profiles_json}" \
         "${post_start_json}" \
         "${volumes_from_json}" \
+        "${use_api_socket}" \
         "${security_opt_json}" \
         "${tmpfs_json}" \
         "${healthcheck_json}"
