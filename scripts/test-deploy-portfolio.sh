@@ -547,7 +547,9 @@ if [[ "${post_write_environment_exit_code}" -ne 1 ]]; then
   printf 'Runtime config that changes after environment sanitization must fail\n' >&2
   exit 1
 fi
-/usr/bin/sed -i '' '/^PRIVILEGED=false$/d' "${app_dir}/.env"
+/usr/bin/sed '/^PRIVILEGED=false$/d' "${app_dir}/.env" \
+  >"${app_dir}/.env.cleaned"
+/bin/mv "${app_dir}/.env.cleaned" "${app_dir}/.env"
 
 set +e
 FAKE_RENDER_TMPFS_JSON='["/srv/site"]' \
