@@ -331,6 +331,8 @@ if (
     or service.get("devices")
 ):
     raise SystemExit("Portfolio must not override image user or add privileges")
+if service.get("volumes") or service.get("configs") or service.get("secrets"):
+    raise SystemExit("Portfolio must serve only image-owned content")
 if service.get("scale", 1) != 1:
     raise SystemExit("Portfolio must run exactly one replica")
 if service.get("deploy", {}).get("replicas", 1) != 1:
@@ -591,6 +593,8 @@ recover_pending_transaction() {
   local state_image
   local state_digest
   local state_compose_sha
+  local state_previous_image
+  local state_previous_digest
   local recovery_release
   local recovery_compose
   local expected_current
@@ -616,8 +620,15 @@ recover_pending_transaction() {
   state_image="$(read_state_value APPLICATION_IMAGE)"
   state_digest="$(read_state_value RUNTIME_CONFIG_DIGEST)"
   state_compose_sha="$(read_state_value RUNTIME_CONFIG_COMPOSE_SHA256)"
+  state_previous_image="$(read_state_value PREVIOUS_APPLICATION_IMAGE)"
+  state_previous_digest="$(read_state_value PREVIOUS_RUNTIME_CONFIG_DIGEST)"
 
   if [[ "${state_image}" == "${target_image}" && "${state_digest}" == "${target_digest}" ]]; then
+    if [[ "${state_previous_image}" != "${previous_image}" ]] \
+      || [[ "${state_previous_digest}" != "${previous_digest}" ]]
+    then
+      fail "completed target predecessor does not match pending state"
+    fi
     recovery_release="$(
       validate_verified_release "${target_digest}" "${state_compose_sha}"
     )"

@@ -257,11 +257,27 @@ release_two="${app_dir}/runtime-config/releases/${CONFIG_DIGEST_TWO#sha256:}"
 /usr/bin/sed \
   -e "s#^APPLICATION_IMAGE=.*#APPLICATION_IMAGE=ghcr.io/xxh3898/portfolio@${APP_DIGEST_THREE}#" \
   -e "s#^APPLICATION_REVISION=.*#APPLICATION_REVISION=${REVISION_THREE}#" \
+  -e "s#^PREVIOUS_APPLICATION_IMAGE=.*#PREVIOUS_APPLICATION_IMAGE=ghcr.io/xxh3898/portfolio@${APP_DIGEST_ONE}#" \
+  -e "s#^PREVIOUS_RUNTIME_CONFIG_DIGEST=.*#PREVIOUS_RUNTIME_CONFIG_DIGEST=${CONFIG_DIGEST_TWO}#" \
   -e "s#^RUNTIME_CONFIG_DIGEST=.*#RUNTIME_CONFIG_DIGEST=${CONFIG_DIGEST_TWO}#" \
   "${state_file}" >"${state_file}.target"
 /bin/mv "${state_file}.target" "${state_file}"
 printf 'PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_THREE}" \
   >"${app_dir}/.env"
+
+set +e
+run_recovery >/dev/null 2>&1
+mismatched_predecessor_exit_code="$?"
+set -e
+if [[ "${mismatched_predecessor_exit_code}" -ne 65 || ! -f "${pending_file}" ]]; then
+  printf 'Completed target recovery with a mismatched predecessor must fail\n' >&2
+  exit 1
+fi
+/usr/bin/sed \
+  -e "s#^PREVIOUS_APPLICATION_IMAGE=.*#PREVIOUS_APPLICATION_IMAGE=ghcr.io/xxh3898/portfolio@${APP_DIGEST_TWO}#" \
+  -e "s#^PREVIOUS_RUNTIME_CONFIG_DIGEST=.*#PREVIOUS_RUNTIME_CONFIG_DIGEST=${CONFIG_DIGEST}#" \
+  "${state_file}" >"${state_file}.matched"
+/bin/mv "${state_file}.matched" "${state_file}"
 
 set +e
 FAKE_SERVICE_HEALTH=unhealthy run_recovery >/dev/null 2>&1
