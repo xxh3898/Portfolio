@@ -314,6 +314,31 @@ if config.get("name") != "portfolio":
 if set(services) != {"portfolio"}:
     raise SystemExit("unexpected Portfolio service set")
 service = services["portfolio"]
+allowed_service_keys = {
+    "command",
+    "container_name",
+    "entrypoint",
+    "healthcheck",
+    "image",
+    "init",
+    "logging",
+    "networks",
+    "pids_limit",
+    "read_only",
+    "restart",
+    "security_opt",
+    "profiles",
+    "scale",
+    "tmpfs",
+    "user",
+}
+unsupported_service_keys = {
+    name
+    for name, value in service.items()
+    if name not in allowed_service_keys and value not in (None, False, "", [], {})
+}
+if unsupported_service_keys:
+    raise SystemExit("Portfolio contains an unsupported Compose service field")
 if service.get("image") != expected_image:
     raise SystemExit("Portfolio image does not match the requested deployment")
 if set(service.get("networks", {})) != {"edge"}:
