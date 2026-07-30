@@ -10,3 +10,6 @@
 !assets/
 !assets/images/
 !assets/images/**
+!homeserver/
+!homeserver/compose.yaml
+!homeserver/runtime-config.Dockerfile

@@ -46,6 +46,55 @@ jobs:
           cache-from: type=gha,scope=portfolio-arm64
           cache-to: type=gha,mode=max,scope=portfolio-arm64
 
+      - name: Build runtime config verification image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: homeserver/runtime-config.Dockerfile
+          platforms: linux/arm64
+          load: true
+          push: false
+          tags: portfolio-runtime-config:verify
+          build-args: |
+            REVISION=1111111111111111111111111111111111111111
+
+      - name: Verify runtime config artifact
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          expected_revision=1111111111111111111111111111111111111111
+          actual_revision="$(
+            docker image inspect \
+              --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' \
+              portfolio-runtime-config:verify
+          )"
+          test "${actual_revision}" = "${expected_revision}"
+
+          container_id="$(docker create portfolio-runtime-config:verify)"
+          runtime_dir="$(mktemp -d)"
+
+          cleanup_runtime_config() {
+            docker rm "${container_id}" >/dev/null 2>&1 || true
+            rm -rf -- "${runtime_dir}"
+          }
+          trap cleanup_runtime_config EXIT INT TERM
+
+          docker cp "${container_id}:/runtime/." "${runtime_dir}"
+          test -f "${runtime_dir}/compose.yaml"
+          test "$(
+            find "${runtime_dir}" -type f -print \
+              | sed "s#^${runtime_dir}/##" \
+              | sort
+          )" = compose.yaml
+
+          PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@sha256:1111111111111111111111111111111111111111111111111111111111111111 \
+            docker compose \
+              --project-directory "${runtime_dir}" \
+              --file "${runtime_dir}/compose.yaml" \
+              config \
+              --quiet
+
       - name: Verify container runtime
         shell: bash
         run: |
