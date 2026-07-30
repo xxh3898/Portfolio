@@ -77,8 +77,10 @@ case "${command_name}" in
       fi
     fi
     if [[ "${arguments}" == *" --format json "* ]]; then
-      printf '%s\n' \
-        '{"services":{"portfolio":{"networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":{"test":["CMD","true"]}}},"networks":{"edge":{"external":true,"name":"edge"}}}'
+      rendered_image="${FAKE_RENDER_IMAGE:-${PORTFOLIO_IMAGE}}"
+      printf \
+        '{"services":{"portfolio":{"image":"%s","networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":{"test":["CMD","true"]}}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
+        "${rendered_image}"
     elif [[ "${arguments}" == *" ps --status running --services "* ]]; then
       printf 'portfolio\n'
     fi

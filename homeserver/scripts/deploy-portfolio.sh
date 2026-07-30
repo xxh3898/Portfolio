@@ -297,11 +297,14 @@ import json
 import sys
 
 config = json.load(sys.stdin)
+expected_image = sys.argv[1]
 services = config.get("services", {})
 networks = config.get("networks", {})
 if set(services) != {"portfolio"}:
     raise SystemExit("unexpected Portfolio service set")
 service = services["portfolio"]
+if service.get("image") != expected_image:
+    raise SystemExit("Portfolio image does not match the requested deployment")
 if set(service.get("networks", {})) != {"edge"}:
     raise SystemExit("Portfolio must only join edge")
 if service.get("ports"):
@@ -315,7 +318,7 @@ if not service.get("healthcheck"):
 edge = networks.get("edge", {})
 if edge.get("external") is not True or edge.get("name") != "edge":
     raise SystemExit("Portfolio edge network contract is invalid")
-'
+' "${image}"
 }
 
 prepare_runtime_release() {

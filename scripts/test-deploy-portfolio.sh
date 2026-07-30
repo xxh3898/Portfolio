@@ -51,6 +51,11 @@ run_deploy() {
         FAKE_APP_REVISION_ONE="${REVISION_ONE}" \
         FAKE_APP_REVISION_TWO="${REVISION_TWO}" \
         FAKE_APP_REVISION_THREE="${REVISION_THREE}" \
+        FAKE_DOCKER_LOG="${FAKE_DOCKER_LOG:-}" \
+        FAKE_FAIL_CP="${FAKE_FAIL_CP:-false}" \
+        FAKE_FAIL_UP="${FAKE_FAIL_UP:-false}" \
+        FAKE_RENDER_IMAGE="${FAKE_RENDER_IMAGE:-}" \
+        FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN="${FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN:-false}" \
         /bin/bash "${test_script}" "$@"
 }
 
@@ -207,6 +212,24 @@ if [[ "${recovery_exit_code}" -ne 65 || ! -f "${pending_file}" ]]; then
   exit 1
 fi
 /bin/rm -f -- "${pending_file}"
+
+set +e
+FAKE_RENDER_IMAGE=ghcr.io/xxh3898/portfolio@sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+wrong_image_exit_code="$?"
+set -e
+if [[ "${wrong_image_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a different Portfolio image must fail\n' >&2
+  exit 1
+fi
+/usr/bin/grep -Fxq \
+  "PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@${APP_DIGEST_TWO}" \
+  "${app_dir}/.env"
 
 docker_log="${test_root}/docker.log"
 set +e
