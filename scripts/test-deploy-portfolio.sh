@@ -58,6 +58,7 @@ run_deploy() {
         FAKE_FAIL_UP="${FAKE_FAIL_UP:-false}" \
         FAKE_RENDER_IMAGE="${FAKE_RENDER_IMAGE:-}" \
         FAKE_RENDER_PROJECT_NAME="${FAKE_RENDER_PROJECT_NAME:-}" \
+        FAKE_RENDER_RESTART_POLICY="${FAKE_RENDER_RESTART_POLICY:-}" \
         FAKE_RENDER_WEB_PROFILE="${FAKE_RENDER_WEB_PROFILE:-false}" \
         FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN="${FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN:-false}" \
         FAKE_SERVICE_HEALTH="${FAKE_SERVICE_HEALTH:-healthy}" \
@@ -334,6 +335,21 @@ if [[ "${dangling_state_exit_code}" -ne 65 ]]; then
 fi
 /bin/rm -f -- "${state_file}"
 /bin/mv "${state_file}.valid" "${state_file}"
+
+set +e
+FAKE_RENDER_RESTART_POLICY=no \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+wrong_restart_exit_code="$?"
+set -e
+if [[ "${wrong_restart_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a changed restart policy must fail\n' >&2
+  exit 1
+fi
 
 set +e
 FAKE_RENDER_WEB_PROFILE=true \

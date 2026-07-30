@@ -96,10 +96,12 @@ case "${command_name}" in
       if [[ "${FAKE_RENDER_WEB_PROFILE:-false}" == true ]]; then
         profiles_json='["optional"]'
       fi
+      restart_policy="${FAKE_RENDER_RESTART_POLICY:-unless-stopped}"
       printf \
-        '{"name":"%s","services":{"portfolio":{"image":"%s","profiles":%s,"networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
+        '{"name":"%s","services":{"portfolio":{"image":"%s","restart":"%s","profiles":%s,"networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
         "${project_name}" \
         "${rendered_image}" \
+        "${restart_policy}" \
         "${profiles_json}" \
         "${healthcheck_json}"
     elif [[ "${arguments}" == *" ps --status running --services "* ]]; then
