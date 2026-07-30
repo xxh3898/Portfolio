@@ -88,7 +88,7 @@ case "${command_name}" in
     elif [[ "${arguments}" == *" --format json "* ]]; then
       rendered_image="${FAKE_RENDER_IMAGE:-${PORTFOLIO_IMAGE}}"
       project_name="${FAKE_RENDER_PROJECT_NAME:-portfolio}"
-      healthcheck_json='{"test":["CMD","wget","-q","-O","/dev/null","http://127.0.0.1:8080/health"]}'
+      healthcheck_json="${FAKE_RENDER_HEALTHCHECK_JSON:-{\"test\":[\"CMD\",\"wget\",\"-q\",\"-O\",\"/dev/null\",\"http://127.0.0.1:8080/health\"],\"interval\":\"30s\",\"timeout\":\"5s\",\"start_period\":\"5s\",\"retries\":3}}"
       if [[ "${FAKE_DISABLE_HEALTHCHECK:-false}" == true ]]; then
         healthcheck_json='{"disable":true}'
       fi
@@ -108,9 +108,11 @@ case "${command_name}" in
       pids_limit="${FAKE_RENDER_PIDS_LIMIT:-100}"
       logging_json="${FAKE_RENDER_LOGGING_JSON:-{\"driver\":\"json-file\",\"options\":{\"max-size\":\"10m\",\"max-file\":\"3\"}}}"
       edge_attachment_json="${FAKE_RENDER_EDGE_ATTACHMENT_JSON:-null}"
+      container_name="${FAKE_RENDER_CONTAINER_NAME:-portfolio}"
       printf \
-        '{"name":"%s","services":{"portfolio":{"image":"%s","restart":"%s","user":"%s","scale":%s,"profiles":%s,"post_start":%s,"volumes_from":%s,"use_api_socket":%s,"pid":%s,"pids_limit":%s,"logging":%s,"networks":{"edge":%s},"read_only":true,"init":true,"security_opt":%s,"tmpfs":%s,"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
+        '{"name":"%s","services":{"portfolio":{"container_name":"%s","image":"%s","restart":"%s","user":"%s","scale":%s,"profiles":%s,"post_start":%s,"volumes_from":%s,"use_api_socket":%s,"pid":%s,"pids_limit":%s,"logging":%s,"networks":{"edge":%s},"read_only":true,"init":true,"security_opt":%s,"tmpfs":%s,"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
         "${project_name}" \
+        "${container_name}" \
         "${rendered_image}" \
         "${restart_policy}" \
         "${user_override}" \

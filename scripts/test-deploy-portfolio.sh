@@ -57,6 +57,8 @@ run_deploy() {
         FAKE_FAIL_IF_AMBIENT_IMAGE="${FAKE_FAIL_IF_AMBIENT_IMAGE:-false}" \
         FAKE_FAIL_UP="${FAKE_FAIL_UP:-false}" \
         FAKE_RENDER_IMAGE="${FAKE_RENDER_IMAGE:-}" \
+        FAKE_RENDER_CONTAINER_NAME="${FAKE_RENDER_CONTAINER_NAME:-}" \
+        FAKE_RENDER_HEALTHCHECK_JSON="${FAKE_RENDER_HEALTHCHECK_JSON:-}" \
         FAKE_RENDER_PROJECT_NAME="${FAKE_RENDER_PROJECT_NAME:-}" \
         FAKE_RENDER_POST_START_JSON="${FAKE_RENDER_POST_START_JSON:-}" \
         FAKE_RENDER_PID_MODE_JSON="${FAKE_RENDER_PID_MODE_JSON:-}" \
@@ -508,6 +510,28 @@ edge_alias_exit_code="$?"
 set -e
 if [[ "${edge_alias_exit_code}" -ne 1 ]]; then
   printf 'Runtime config with an edge network alias must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_CONTAINER_NAME=database \
+  run_deploy "${APP_DIGEST_THREE}" "${REVISION_THREE}" keep test-user \
+  >/dev/null 2>&1
+container_name_exit_code="$?"
+set -e
+if [[ "${container_name_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a changed container name must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_HEALTHCHECK_JSON='{"test":["CMD","wget","-q","-O","/dev/null","http://127.0.0.1:8080/health"],"interval":"1ms","timeout":"5s","start_period":"5s","retries":3}' \
+  run_deploy "${APP_DIGEST_THREE}" "${REVISION_THREE}" keep test-user \
+  >/dev/null 2>&1
+healthcheck_schedule_exit_code="$?"
+set -e
+if [[ "${healthcheck_schedule_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a changed healthcheck schedule must fail\n' >&2
   exit 1
 fi
 

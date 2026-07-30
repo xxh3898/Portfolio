@@ -341,6 +341,8 @@ if unsupported_service_keys:
     raise SystemExit("Portfolio contains an unsupported Compose service field")
 if service.get("image") != expected_image:
     raise SystemExit("Portfolio image does not match the requested deployment")
+if service.get("container_name") != "portfolio":
+    raise SystemExit("Portfolio container name must remain portfolio")
 if set(service.get("networks", {})) != {"edge"}:
     raise SystemExit("Portfolio must only join edge")
 if service.get("networks", {}).get("edge") is not None:
@@ -392,14 +394,20 @@ if service.get("logging") != {
 }:
     raise SystemExit("Portfolio logging rotation contract is invalid")
 healthcheck = service.get("healthcheck", {})
-if healthcheck.get("disable") is True or healthcheck.get("test") != [
-    "CMD",
-    "wget",
-    "-q",
-    "-O",
-    "/dev/null",
-    "http://127.0.0.1:8080/health",
-]:
+if healthcheck != {
+    "test": [
+        "CMD",
+        "wget",
+        "-q",
+        "-O",
+        "/dev/null",
+        "http://127.0.0.1:8080/health",
+    ],
+    "interval": "30s",
+    "timeout": "5s",
+    "start_period": "5s",
+    "retries": 3,
+}:
     raise SystemExit("Portfolio healthcheck contract is invalid")
 edge = networks.get("edge", {})
 if edge.get("external") is not True or edge.get("name") != "edge":
