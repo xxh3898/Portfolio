@@ -54,11 +54,13 @@ run_deploy() {
         FAKE_DOCKER_LOG="${FAKE_DOCKER_LOG:-}" \
         FAKE_DISABLE_HEALTHCHECK="${FAKE_DISABLE_HEALTHCHECK:-false}" \
         FAKE_FAIL_CP="${FAKE_FAIL_CP:-false}" \
+        FAKE_FAIL_IF_AMBIENT_IMAGE="${FAKE_FAIL_IF_AMBIENT_IMAGE:-false}" \
         FAKE_FAIL_UP="${FAKE_FAIL_UP:-false}" \
         FAKE_RENDER_IMAGE="${FAKE_RENDER_IMAGE:-}" \
         FAKE_RENDER_PROJECT_NAME="${FAKE_RENDER_PROJECT_NAME:-}" \
         FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN="${FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN:-false}" \
         FAKE_SERVICE_HEALTH="${FAKE_SERVICE_HEALTH:-healthy}" \
+        PORTFOLIO_IMAGE="${PORTFOLIO_IMAGE:-}" \
         /bin/bash "${test_script}" "$@"
 }
 
@@ -157,6 +159,14 @@ if [[ "${legacy_after_v2_exit_code}" -ne 75 ]]; then
   exit 1
 fi
 
+PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@${APP_DIGEST_THREE} \
+FAKE_FAIL_IF_AMBIENT_IMAGE=true \
+  run_deploy \
+    "${APP_DIGEST_TWO}" \
+    "${REVISION_TWO}" \
+    keep \
+    test-user
+
 run_deploy \
   "${APP_DIGEST_TWO}" \
   "${REVISION_TWO}" \
@@ -186,6 +196,20 @@ pending_file="${app_dir}/runtime-config/pending"
 /bin/chmod 600 "${pending_file}"
 printf 'PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_THREE}" \
   >"${app_dir}/.env"
+
+/bin/cp "${state_file}" "${state_file}.valid"
+/usr/bin/sed \
+  -e 's#^RUNTIME_CONFIG_REVISION=.*#RUNTIME_CONFIG_REVISION=garbage#' \
+  "${state_file}.valid" >"${state_file}"
+set +e
+run_recovery >/dev/null 2>&1
+invalid_state_recovery_exit_code="$?"
+set -e
+if [[ "${invalid_state_recovery_exit_code}" -ne 65 || ! -f "${pending_file}" ]]; then
+  printf 'Recovery with invalid state values must fail and preserve pending\n' >&2
+  exit 1
+fi
+/bin/mv "${state_file}.valid" "${state_file}"
 
 set +e
 run_deploy "${APP_DIGEST_ONE}" test-user >/dev/null 2>&1

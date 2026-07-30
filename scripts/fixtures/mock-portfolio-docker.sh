@@ -57,6 +57,12 @@ case "${command_name}" in
     ;;
   compose)
     arguments=" $* "
+    if [[ "${arguments}" == *" up "* ]] \
+      && [[ "${FAKE_FAIL_IF_AMBIENT_IMAGE:-false}" == true ]] \
+      && [[ -n "${PORTFOLIO_IMAGE:-}" ]]
+    then
+      exit 1
+    fi
     if [[ "${arguments}" == *" up "* && "${FAKE_FAIL_UP:-false}" == true ]]; then
       exit 1
     fi

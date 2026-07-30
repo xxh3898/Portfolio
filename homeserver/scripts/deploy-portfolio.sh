@@ -18,6 +18,8 @@ readonly ZERO_SHA=0000000000000000000000000000000000000000
 readonly ZERO_DIGEST=sha256:0000000000000000000000000000000000000000000000000000000000000000
 readonly HEALTH_TIMEOUT_SECONDS=60
 
+unset PORTFOLIO_IMAGE
+
 usage() {
   printf '%s\n' \
     'Usage:' \
@@ -504,7 +506,14 @@ validate_pending_state() {
 }
 
 validate_state_file() {
+  local application_image
+  local application_revision
   local keys
+  local previous_image
+  local previous_digest
+  local runtime_digest
+  local runtime_revision
+  local runtime_compose_sha
 
   if [[ ! -f "${RUNTIME_CONFIG_STATE}" || -L "${RUNTIME_CONFIG_STATE}" ]]; then
     fail "runtime config state must be a regular non-symlink file"
@@ -515,6 +524,26 @@ validate_state_file() {
   )"
   if [[ "${keys}" != $'APPLICATION_IMAGE\nAPPLICATION_REVISION\nPREVIOUS_APPLICATION_IMAGE\nPREVIOUS_RUNTIME_CONFIG_DIGEST\nRUNTIME_CONFIG_COMPOSE_SHA256\nRUNTIME_CONFIG_DIGEST\nRUNTIME_CONFIG_REVISION' ]]; then
     fail "runtime config state keys are invalid"
+  fi
+
+  application_image="$(read_state_value APPLICATION_IMAGE)"
+  application_revision="$(read_state_value APPLICATION_REVISION)"
+  previous_image="$(read_state_value PREVIOUS_APPLICATION_IMAGE)"
+  previous_digest="$(read_state_value PREVIOUS_RUNTIME_CONFIG_DIGEST)"
+  runtime_digest="$(read_state_value RUNTIME_CONFIG_DIGEST)"
+  runtime_revision="$(read_state_value RUNTIME_CONFIG_REVISION)"
+  runtime_compose_sha="$(read_state_value RUNTIME_CONFIG_COMPOSE_SHA256)"
+  if ! is_approved_image "${application_image}" \
+    || [[ ! "${application_revision}" =~ ^[0-9a-f]{40}$ ]] \
+    || [[ "${application_revision}" == "${ZERO_SHA}" ]] \
+    || { [[ -n "${previous_image}" ]] && ! is_approved_image "${previous_image}"; } \
+    || { [[ "${previous_digest}" != "${ZERO_DIGEST}" ]] && ! is_digest "${previous_digest}"; } \
+    || ! is_digest "${runtime_digest}" \
+    || [[ ! "${runtime_revision}" =~ ^[0-9a-f]{40}$ ]] \
+    || [[ "${runtime_revision}" == "${ZERO_SHA}" ]] \
+    || [[ ! "${runtime_compose_sha}" =~ ^[0-9a-f]{64}$ ]]
+  then
+    fail "runtime config state values are invalid"
   fi
 }
 
