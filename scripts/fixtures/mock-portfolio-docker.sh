@@ -86,6 +86,15 @@ case "${command_name}" in
       printf '[{"Service":"portfolio","Health":"%s"}]\n' \
         "${FAKE_SERVICE_HEALTH:-healthy}"
     elif [[ "${arguments}" == *" --format json "* ]]; then
+      env_file=
+      previous_argument=
+      for argument in "$@"; do
+        if [[ "${previous_argument}" == --env-file ]]; then
+          env_file="${argument}"
+          break
+        fi
+        previous_argument="${argument}"
+      done
       rendered_image="${FAKE_RENDER_IMAGE:-${PORTFOLIO_IMAGE}}"
       project_name="${FAKE_RENDER_PROJECT_NAME:-portfolio}"
       healthcheck_json="${FAKE_RENDER_HEALTHCHECK_JSON:-{\"test\":[\"CMD\",\"wget\",\"-q\",\"-O\",\"/dev/null\",\"http://127.0.0.1:8080/health\"],\"interval\":\"30s\",\"timeout\":\"5s\",\"start_period\":\"5s\",\"retries\":3}}"
@@ -109,13 +118,20 @@ case "${command_name}" in
       logging_json="${FAKE_RENDER_LOGGING_JSON:-{\"driver\":\"json-file\",\"options\":{\"max-size\":\"10m\",\"max-file\":\"3\"}}}"
       edge_attachment_json="${FAKE_RENDER_EDGE_ATTACHMENT_JSON:-null}"
       container_name="${FAKE_RENDER_CONTAINER_NAME:-portfolio}"
+      privileged=false
+      if [[ "${FAKE_RENDER_PRIVILEGED_FROM_ENV:-false}" == true ]] \
+        && ! /usr/bin/grep -Fxq 'PRIVILEGED=false' "${env_file}"
+      then
+        privileged=true
+      fi
       printf \
-        '{"name":"%s","services":{"portfolio":{"container_name":"%s","image":"%s","restart":"%s","user":"%s","scale":%s,"profiles":%s,"post_start":%s,"volumes_from":%s,"use_api_socket":%s,"pid":%s,"pids_limit":%s,"logging":%s,"networks":{"edge":%s},"read_only":true,"init":true,"security_opt":%s,"tmpfs":%s,"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
+        '{"name":"%s","services":{"portfolio":{"container_name":"%s","image":"%s","restart":"%s","user":"%s","privileged":%s,"scale":%s,"profiles":%s,"post_start":%s,"volumes_from":%s,"use_api_socket":%s,"pid":%s,"pids_limit":%s,"logging":%s,"networks":{"edge":%s},"read_only":true,"init":true,"security_opt":%s,"tmpfs":%s,"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
         "${project_name}" \
         "${container_name}" \
         "${rendered_image}" \
         "${restart_policy}" \
         "${user_override}" \
+        "${privileged}" \
         "${scale}" \
         "${profiles_json}" \
         "${post_start_json}" \

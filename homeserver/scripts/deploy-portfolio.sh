@@ -206,14 +206,22 @@ read_state_value() {
   /usr/bin/sed -n "s/^${key}=//p" "${RUNTIME_CONFIG_STATE}" | /usr/bin/tail -n 1
 }
 
-write_image_env() {
+prepare_image_env() {
   local image="$1"
 
   env_temp="$(/usr/bin/mktemp "${APP_DIR}/.env.tmp.XXXXXX")"
   printf 'PORTFOLIO_IMAGE=%s\n' "${image}" >"${env_temp}"
   /bin/chmod 600 "${env_temp}"
+}
+
+commit_image_env() {
   /bin/mv -f -- "${env_temp}" "${ENV_FILE}"
   env_temp=
+}
+
+write_image_env() {
+  prepare_image_env "$1"
+  commit_image_env
 }
 
 compose_with() {
@@ -278,13 +286,14 @@ compose_sha256() {
 validate_compose_contract() {
   local compose_file="$1"
   local image="$2"
+  local validation_env="${3:-${ENV_FILE}}"
   local rendered
 
   PORTFOLIO_IMAGE="${image}" \
     "${DOCKER_BIN}" \
       compose \
       --project-directory "$(/usr/bin/dirname "${compose_file}")" \
-      --env-file "${ENV_FILE}" \
+      --env-file "${validation_env}" \
       --file "${compose_file}" \
       config \
       --quiet
@@ -294,7 +303,7 @@ validate_compose_contract() {
       "${DOCKER_BIN}" \
         compose \
         --project-directory "$(/usr/bin/dirname "${compose_file}")" \
-        --env-file "${ENV_FILE}" \
+        --env-file "${validation_env}" \
         --file "${compose_file}" \
         config \
         --format json
@@ -699,7 +708,13 @@ recover_pending_transaction() {
     fi
 
     recovery_compose="${recovery_release}/compose.yaml"
-    validate_compose_contract "${recovery_compose}" "${target_image}"
+    prepare_image_env "${target_image}"
+    validate_compose_contract "${recovery_compose}" "${target_image}" "${env_temp}"
+    if ! /usr/bin/cmp -s "${env_temp}" "${ENV_FILE}"; then
+      fail "completed target environment is not sanitized"
+    fi
+    /bin/rm -f -- "${env_temp}"
+    env_temp=
     running_services="$(
       compose_with "${recovery_compose}" ps --status running --services
     )"
@@ -758,8 +773,9 @@ print(entry.get("Health", ""))
     recovery_compose="${recovery_release}/compose.yaml"
   fi
 
-  validate_compose_contract "${recovery_compose}" "${previous_image}"
-  write_image_env "${previous_image}"
+  prepare_image_env "${previous_image}"
+  validate_compose_contract "${recovery_compose}" "${previous_image}" "${env_temp}"
+  commit_image_env
   if ! compose_with "${recovery_compose}" up \
     --no-build \
     --remove-orphans \
@@ -865,10 +881,11 @@ else
   candidate_compose="${candidate_release}/compose.yaml"
 fi
 
-validate_compose_contract "${candidate_compose}" "${new_image}"
+prepare_image_env "${new_image}"
+validate_compose_contract "${candidate_compose}" "${new_image}" "${env_temp}"
 
 if [[ "${legacy_mode}" == true ]]; then
-  write_image_env "${new_image}"
+  commit_image_env
 else
   previous_config_digest="${current_config_digest:-${ZERO_DIGEST}}"
   if is_digest "${previous_config_digest}"; then
@@ -882,7 +899,7 @@ else
     "${previous_config_digest}" \
     "${new_image}" \
     "${candidate_config_digest}"
-  write_image_env "${new_image}"
+  commit_image_env
 fi
 
 if compose_with "${candidate_compose}" up \

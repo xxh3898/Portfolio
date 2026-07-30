@@ -60,6 +60,7 @@ run_deploy() {
         FAKE_RENDER_CONTAINER_NAME="${FAKE_RENDER_CONTAINER_NAME:-}" \
         FAKE_RENDER_HEALTHCHECK_JSON="${FAKE_RENDER_HEALTHCHECK_JSON:-}" \
         FAKE_RENDER_PROJECT_NAME="${FAKE_RENDER_PROJECT_NAME:-}" \
+        FAKE_RENDER_PRIVILEGED_FROM_ENV="${FAKE_RENDER_PRIVILEGED_FROM_ENV:-false}" \
         FAKE_RENDER_POST_START_JSON="${FAKE_RENDER_POST_START_JSON:-}" \
         FAKE_RENDER_PID_MODE_JSON="${FAKE_RENDER_PID_MODE_JSON:-}" \
         FAKE_RENDER_PIDS_LIMIT="${FAKE_RENDER_PIDS_LIMIT:-}" \
@@ -534,6 +535,19 @@ if [[ "${healthcheck_schedule_exit_code}" -ne 1 ]]; then
   printf 'Runtime config with a changed healthcheck schedule must fail\n' >&2
   exit 1
 fi
+
+printf 'PRIVILEGED=false\n' >>"${app_dir}/.env"
+set +e
+FAKE_RENDER_PRIVILEGED_FROM_ENV=true \
+  run_deploy "${APP_DIGEST_THREE}" "${REVISION_THREE}" keep test-user \
+  >/dev/null 2>&1
+post_write_environment_exit_code="$?"
+set -e
+if [[ "${post_write_environment_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config that changes after environment sanitization must fail\n' >&2
+  exit 1
+fi
+/usr/bin/sed -i '' '/^PRIVILEGED=false$/d' "${app_dir}/.env"
 
 set +e
 FAKE_RENDER_TMPFS_JSON='["/srv/site"]' \
