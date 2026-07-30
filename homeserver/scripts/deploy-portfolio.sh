@@ -35,6 +35,12 @@ fail() {
   exit "${2:-65}"
 }
 
+require_legacy_compose() {
+  if [[ ! -f "${LEGACY_COMPOSE_FILE}" ]]; then
+    fail "legacy production Compose configuration is missing" 66
+  fi
+}
+
 is_digest() {
   [[ "$1" =~ ^sha256:[0-9a-f]{64}$ ]] && [[ "$1" != "${ZERO_DIGEST}" ]]
 }
@@ -114,8 +120,8 @@ if [[ ! -x "${PYTHON_BIN}" ]]; then
   fail "Python is not executable: ${PYTHON_BIN}" 69
 fi
 
-if [[ ! -f "${LEGACY_COMPOSE_FILE}" || ! -f "${ENV_FILE}" ]]; then
-  fail "production Compose configuration is incomplete" 66
+if [[ ! -f "${ENV_FILE}" ]]; then
+  fail "production environment configuration is missing" 66
 fi
 
 if [[ "${recovery_mode}" == false ]] \
@@ -130,6 +136,9 @@ if [[ "${legacy_mode}" == true ]] \
   }
 then
   fail "legacy deployment is disabled after runtime config state initialization" 75
+fi
+if [[ "${legacy_mode}" == true ]]; then
+  require_legacy_compose
 fi
 
 registry_token=
@@ -751,6 +760,7 @@ print(entry.get("Health", ""))
     if [[ -n "${state_image}" || "${previous_digest}" != "${ZERO_DIGEST}" ]]; then
       fail "bootstrap recovery state is inconsistent"
     fi
+    require_legacy_compose
     write_image_env "${target_image}"
     if ! compose_with "${LEGACY_COMPOSE_FILE}" down; then
       fail "bootstrap recovery could not remove the interrupted target service"
@@ -762,6 +772,7 @@ print(entry.get("Health", ""))
   fi
 
   if [[ -z "${state_image}" && -z "${state_digest}" && "${previous_digest}" == "${ZERO_DIGEST}" ]]; then
+    require_legacy_compose
     recovery_compose="${LEGACY_COMPOSE_FILE}"
   else
     if [[ "${state_image}" != "${previous_image}" || "${state_digest}" != "${previous_digest}" ]]; then
@@ -893,6 +904,9 @@ else
     previous_release="$(release_dir_for_digest "${previous_config_digest}")"
     previous_compose="${previous_release}/compose.yaml"
   else
+    if [[ -n "${previous_image}" ]]; then
+      require_legacy_compose
+    fi
     previous_compose="${LEGACY_COMPOSE_FILE}"
   fi
   write_pending_state \

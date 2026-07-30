@@ -13,6 +13,7 @@ APP_DIGEST_TWO=sha256:2222222222222222222222222222222222222222222222222222222222
 APP_DIGEST_THREE=sha256:3333333333333333333333333333333333333333333333333333333333333333
 CONFIG_DIGEST=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 CONFIG_DIGEST_TWO=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+CONFIG_DIGEST_THREE=sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 REVISION_ONE=1111111111111111111111111111111111111111
 REVISION_TWO=2222222222222222222222222222222222222222
 REVISION_THREE=3333333333333333333333333333333333333333
@@ -176,6 +177,20 @@ if [[ "${legacy_after_v2_exit_code}" -ne 75 ]]; then
   exit 1
 fi
 
+/bin/mv "${app_dir}/compose.yaml" "${app_dir}/compose.yaml.legacy"
+run_deploy \
+  "${APP_DIGEST_ONE}" \
+  "${REVISION_ONE}" \
+  update \
+  "${CONFIG_DIGEST_THREE}" \
+  test-user
+/usr/bin/grep -Fxq "RUNTIME_CONFIG_DIGEST=${CONFIG_DIGEST_THREE}" "${state_file}"
+run_deploy \
+  "${APP_DIGEST_ONE}" \
+  "${REVISION_ONE}" \
+  update \
+  "${CONFIG_DIGEST}" \
+  test-user
 PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@${APP_DIGEST_THREE} \
 FAKE_FAIL_IF_AMBIENT_IMAGE=true \
   run_deploy \
@@ -183,6 +198,7 @@ FAKE_FAIL_IF_AMBIENT_IMAGE=true \
     "${REVISION_TWO}" \
     keep \
     test-user
+/bin/mv "${app_dir}/compose.yaml.legacy" "${app_dir}/compose.yaml"
 
 run_deploy \
   "${APP_DIGEST_TWO}" \
@@ -251,7 +267,9 @@ fi
 /bin/mv "${state_file}.real" "${state_file}"
 
 recovery_docker_log="${test_root}/recovery-docker.log"
+/bin/mv "${app_dir}/compose.yaml" "${app_dir}/compose.yaml.legacy"
 FAKE_DOCKER_LOG="${recovery_docker_log}" run_recovery
+/bin/mv "${app_dir}/compose.yaml.legacy" "${app_dir}/compose.yaml"
 /usr/bin/grep -Eq 'compose .* up .*--pull never' "${recovery_docker_log}"
 
 test ! -e "${pending_file}"
