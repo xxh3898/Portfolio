@@ -99,14 +99,16 @@ case "${command_name}" in
       restart_policy="${FAKE_RENDER_RESTART_POLICY:-unless-stopped}"
       scale="${FAKE_RENDER_SCALE:-1}"
       user_override="${FAKE_RENDER_USER_OVERRIDE:-}"
+      tmpfs_json="${FAKE_RENDER_TMPFS_JSON:-[\"/tmp:size=64m,mode=1777\"]}"
       printf \
-        '{"name":"%s","services":{"portfolio":{"image":"%s","restart":"%s","user":"%s","scale":%s,"profiles":%s,"networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
+        '{"name":"%s","services":{"portfolio":{"image":"%s","restart":"%s","user":"%s","scale":%s,"profiles":%s,"networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"tmpfs":%s,"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
         "${project_name}" \
         "${rendered_image}" \
         "${restart_policy}" \
         "${user_override}" \
         "${scale}" \
         "${profiles_json}" \
+        "${tmpfs_json}" \
         "${healthcheck_json}"
     elif [[ "${arguments}" == *" ps --status running --services "* ]]; then
       printf 'portfolio\n'

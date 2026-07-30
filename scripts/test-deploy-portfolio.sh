@@ -60,6 +60,7 @@ run_deploy() {
         FAKE_RENDER_PROJECT_NAME="${FAKE_RENDER_PROJECT_NAME:-}" \
         FAKE_RENDER_RESTART_POLICY="${FAKE_RENDER_RESTART_POLICY:-}" \
         FAKE_RENDER_SCALE="${FAKE_RENDER_SCALE:-}" \
+        FAKE_RENDER_TMPFS_JSON="${FAKE_RENDER_TMPFS_JSON:-}" \
         FAKE_RENDER_USER_OVERRIDE="${FAKE_RENDER_USER_OVERRIDE:-}" \
         FAKE_RENDER_WEB_PROFILE="${FAKE_RENDER_WEB_PROFILE:-false}" \
         FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN="${FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN:-false}" \
@@ -245,6 +246,16 @@ test ! -e "${pending_file}"
   "${app_dir}/.env"
 /usr/bin/grep -Fxq "APPLICATION_REVISION=${REVISION_TWO}" "${state_file}"
 
+{
+  printf 'PREVIOUS_APPLICATION_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_TWO}"
+  printf 'PREVIOUS_RUNTIME_CONFIG_DIGEST=%s\n' "${CONFIG_DIGEST}"
+  printf 'TARGET_APPLICATION_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_TWO}"
+  printf 'TARGET_RUNTIME_CONFIG_DIGEST=%s\n' "${CONFIG_DIGEST}"
+} >"${pending_file}"
+/bin/chmod 600 "${pending_file}"
+run_recovery
+test ! -e "${pending_file}"
+
 release_one="${app_dir}/runtime-config/releases/${CONFIG_DIGEST#sha256:}"
 release_two="${app_dir}/runtime-config/releases/${CONFIG_DIGEST_TWO#sha256:}"
 /bin/cp -R "${release_one}" "${release_two}"
@@ -381,6 +392,21 @@ root_user_exit_code="$?"
 set -e
 if [[ "${root_user_exit_code}" -ne 1 ]]; then
   printf 'Runtime config with a root user override must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_TMPFS_JSON='["/srv/site"]' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+wrong_tmpfs_exit_code="$?"
+set -e
+if [[ "${wrong_tmpfs_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with an image-content tmpfs override must fail\n' >&2
   exit 1
 fi
 

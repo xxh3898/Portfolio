@@ -333,6 +333,8 @@ if (
     raise SystemExit("Portfolio must not override image user or add privileges")
 if service.get("volumes") or service.get("configs") or service.get("secrets"):
     raise SystemExit("Portfolio must serve only image-owned content")
+if service.get("tmpfs") != ["/tmp:size=64m,mode=1777"]:
+    raise SystemExit("Portfolio tmpfs contract is invalid")
 if service.get("scale", 1) != 1:
     raise SystemExit("Portfolio must run exactly one replica")
 if service.get("deploy", {}).get("replicas", 1) != 1:
@@ -624,10 +626,14 @@ recover_pending_transaction() {
   state_previous_digest="$(read_state_value PREVIOUS_RUNTIME_CONFIG_DIGEST)"
 
   if [[ "${state_image}" == "${target_image}" && "${state_digest}" == "${target_digest}" ]]; then
-    if [[ "${state_previous_image}" != "${previous_image}" ]] \
-      || [[ "${state_previous_digest}" != "${previous_digest}" ]]
+    if [[ "${previous_image}" != "${target_image}" ]] \
+      || [[ "${previous_digest}" != "${target_digest}" ]]
     then
-      fail "completed target predecessor does not match pending state"
+      if [[ "${state_previous_image}" != "${previous_image}" ]] \
+        || [[ "${state_previous_digest}" != "${previous_digest}" ]]
+      then
+        fail "completed target predecessor does not match pending state"
+      fi
     fi
     recovery_release="$(
       validate_verified_release "${target_digest}" "${state_compose_sha}"
