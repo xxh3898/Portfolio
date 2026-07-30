@@ -80,6 +80,15 @@ test -f "${state_file}"
 test -L "${app_dir}/runtime-config/current"
 test ! -e "${app_dir}/runtime-config/pending"
 
+set +e
+run_deploy "${APP_DIGEST_TWO}" test-user >/dev/null 2>&1
+legacy_after_v2_exit_code="$?"
+set -e
+if [[ "${legacy_after_v2_exit_code}" -ne 75 ]]; then
+  printf 'Legacy Portfolio deploy must be disabled after v2 state initialization\n' >&2
+  exit 1
+fi
+
 run_deploy \
   "${APP_DIGEST_TWO}" \
   "${REVISION_TWO}" \

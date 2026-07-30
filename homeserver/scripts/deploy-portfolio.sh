@@ -119,6 +119,9 @@ fi
 if [[ "${recovery_mode}" == false && -e "${RUNTIME_CONFIG_PENDING}" ]]; then
   fail "an incomplete runtime config transaction requires recovery" 75
 fi
+if [[ "${legacy_mode}" == true && -e "${RUNTIME_CONFIG_STATE}" ]]; then
+  fail "legacy deployment is disabled after runtime config state initialization" 75
+fi
 
 registry_token=
 if [[ "${recovery_mode}" == false ]]; then
@@ -741,10 +744,13 @@ if [[ -n "${previous_image}" ]]; then
   fi
 else
   printf 'No previous immutable image exists; removing failed first deployment\n' >&2
-  compose_with "${candidate_compose}" down || true
   write_image_env "${current_image}"
-  if [[ "${legacy_mode}" == false ]]; then
-    /bin/rm -f -- "${RUNTIME_CONFIG_PENDING}"
+  if compose_with "${candidate_compose}" down; then
+    if [[ "${legacy_mode}" == false ]]; then
+      /bin/rm -f -- "${RUNTIME_CONFIG_PENDING}"
+    fi
+  else
+    printf 'Portfolio bootstrap teardown failed; pending transaction retained\n' >&2
   fi
 fi
 
