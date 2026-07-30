@@ -245,6 +245,25 @@ fi
 printf 'PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_TWO}" \
   >"${app_dir}/.env"
 
+/bin/mv "${state_file}" "${state_file}.valid"
+/bin/ln -s missing-state "${state_file}"
+set +e
+run_deploy \
+  "${APP_DIGEST_THREE}" \
+  "${REVISION_THREE}" \
+  update \
+  "${CONFIG_DIGEST_TWO}" \
+  test-user \
+  >/dev/null 2>&1
+dangling_state_exit_code="$?"
+set -e
+if [[ "${dangling_state_exit_code}" -ne 65 ]]; then
+  printf 'Update with a dangling runtime config state symlink must fail\n' >&2
+  exit 1
+fi
+/bin/rm -f -- "${state_file}"
+/bin/mv "${state_file}.valid" "${state_file}"
+
 set +e
 FAKE_DISABLE_HEALTHCHECK=true \
   run_deploy \
