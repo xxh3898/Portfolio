@@ -118,6 +118,41 @@ test ! -e "${pending_file}"
   "${app_dir}/.env"
 /usr/bin/grep -Fxq "APPLICATION_REVISION=${REVISION_TWO}" "${state_file}"
 
+release_one="${app_dir}/runtime-config/releases/${CONFIG_DIGEST#sha256:}"
+release_two="${app_dir}/runtime-config/releases/${CONFIG_DIGEST_TWO#sha256:}"
+/bin/cp -R "${release_one}" "${release_two}"
+{
+  printf 'PREVIOUS_APPLICATION_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_TWO}"
+  printf 'PREVIOUS_RUNTIME_CONFIG_DIGEST=%s\n' "${CONFIG_DIGEST}"
+  printf 'TARGET_APPLICATION_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_THREE}"
+  printf 'TARGET_RUNTIME_CONFIG_DIGEST=%s\n' "${CONFIG_DIGEST_TWO}"
+} >"${pending_file}"
+/usr/bin/sed \
+  -e "s#^APPLICATION_IMAGE=.*#APPLICATION_IMAGE=ghcr.io/xxh3898/portfolio@${APP_DIGEST_THREE}#" \
+  -e "s#^APPLICATION_REVISION=.*#APPLICATION_REVISION=${REVISION_THREE}#" \
+  -e "s#^RUNTIME_CONFIG_DIGEST=.*#RUNTIME_CONFIG_DIGEST=${CONFIG_DIGEST_TWO}#" \
+  "${state_file}" >"${state_file}.target"
+/bin/mv "${state_file}.target" "${state_file}"
+printf 'PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_THREE}" \
+  >"${app_dir}/.env"
+
+run_recovery
+
+test "$(/usr/bin/readlink "${app_dir}/runtime-config/current")" \
+  = "releases/${CONFIG_DIGEST_TWO#sha256:}"
+test ! -e "${pending_file}"
+
+/usr/bin/sed \
+  -e "s#^APPLICATION_IMAGE=.*#APPLICATION_IMAGE=ghcr.io/xxh3898/portfolio@${APP_DIGEST_TWO}#" \
+  -e "s#^APPLICATION_REVISION=.*#APPLICATION_REVISION=${REVISION_TWO}#" \
+  -e "s#^RUNTIME_CONFIG_DIGEST=.*#RUNTIME_CONFIG_DIGEST=${CONFIG_DIGEST}#" \
+  "${state_file}" >"${state_file}.restored"
+/bin/mv "${state_file}.restored" "${state_file}"
+printf 'PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_TWO}" \
+  >"${app_dir}/.env"
+/bin/rm -f -- "${app_dir}/runtime-config/current"
+/bin/ln -s "releases/${CONFIG_DIGEST#sha256:}" "${app_dir}/runtime-config/current"
+
 printf 'UNKNOWN=value\n' >"${pending_file}"
 set +e
 run_recovery >/dev/null 2>&1
@@ -152,7 +187,7 @@ if /usr/bin/find "${app_dir}/runtime-config/releases" -maxdepth 1 -type d -name 
   exit 1
 fi
 
-release_dir="${app_dir}/runtime-config/releases/${CONFIG_DIGEST#sha256:}"
+release_dir="${release_one}"
 printf '\n# tampered\n' >>"${release_dir}/compose.yaml"
 
 set +e

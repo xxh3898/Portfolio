@@ -32,10 +32,12 @@ deploy-portfolio-v2 <sha256:image-digest> <commit-sha> keep <registry-user>
 deploy-portfolio-v2 <sha256:image-digest> <commit-sha> update <sha256:config-digest> <registry-user>
 ```
 
-`homeserver/compose.yaml` 또는 `homeserver/runtime-config.Dockerfile`이 변경된
-배포만 새 runtime-config image를 게시하고 `update`를 사용한다. 애플리케이션만
-변경된 배포는 `keep`으로 현재 검증된 config digest를 유지한다. 첫 전환 또는
-drift 복구는 `workflow_dispatch`의 `sync_runtime_config`를 사용한다.
+마지막 성공 Production deployment 이후 `homeserver/compose.yaml` 또는
+`homeserver/runtime-config.Dockerfile`이 변경된 배포만 새 runtime-config
+image를 게시하고 `update`를 사용한다. 따라서 설정 배포가 실패해도 다음
+배포가 변경을 이어받는다. 애플리케이션만 변경된 배포는 `keep`으로 현재
+검증된 config digest를 유지한다. 첫 전환 또는 drift 복구는
+`workflow_dispatch`의 `sync_runtime_config`를 사용한다.
 
 배포 스크립트는 application/config exact digest와 revision을 검증하고 Compose
 health를 확인한다. 실패하면 직전 정상 application/config 쌍으로 돌아간다.
@@ -75,8 +77,9 @@ pending 파일을 직접 수정·삭제하지 말고 다음 명령을 Mac mini�
 ```
 
 recovery는 pending과 마지막 검증 state, release allowlist·Compose hash,
-`.env`, `current` pointer를 대조한다. target pair 적용이 이미 끝났으면 marker만
-정리하고, 그렇지 않으면 이전 image/config pair를 `--pull never`로 재적용한다.
+`.env`, `current` pointer를 대조한다. target pair 적용이 이미 끝났으면 검증된
+target release로 stale pointer를 원자 조정하고 marker를 정리한다. 그렇지
+않으면 이전 image/config pair를 `--pull never`로 재적용한다.
 runtime config 도입 전 설치는 legacy Compose로 복구한다. 첫 image도 없던
 bootstrap 중단은 app을 제거하고 image 환경을 빈 값으로 되돌린다. 불일치나
 변조가 있으면 marker를 유지한 채 실패한다. 복구 후 container health와

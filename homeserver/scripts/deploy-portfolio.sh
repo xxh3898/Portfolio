@@ -400,6 +400,18 @@ write_pending_state() {
   pending_temp=
 }
 
+replace_current_link() {
+  local release_dir="$1"
+
+  current_link_temp="${RUNTIME_CONFIG_ROOT}/.current.$$"
+  /bin/ln -s "releases/$("/usr/bin/basename" "${release_dir}")" "${current_link_temp}"
+  "${PYTHON_BIN}" -c \
+    'import os, sys; os.replace(sys.argv[1], sys.argv[2])' \
+    "${current_link_temp}" \
+    "${RUNTIME_CONFIG_CURRENT}"
+  current_link_temp=
+}
+
 write_success_state() {
   local application_image="$1"
   local application_revision="$2"
@@ -426,13 +438,7 @@ write_success_state() {
   /bin/mv -f -- "${state_temp}" "${RUNTIME_CONFIG_STATE}"
   state_temp=
 
-  current_link_temp="${RUNTIME_CONFIG_ROOT}/.current.$$"
-  /bin/ln -s "releases/$("/usr/bin/basename" "${release_dir}")" "${current_link_temp}"
-  "${PYTHON_BIN}" -c \
-    'import os, sys; os.replace(sys.argv[1], sys.argv[2])' \
-    "${current_link_temp}" \
-    "${RUNTIME_CONFIG_CURRENT}"
-  current_link_temp=
+  replace_current_link "${release_dir}"
   /bin/rm -f -- "${RUNTIME_CONFIG_PENDING}"
 }
 
@@ -530,12 +536,6 @@ recover_pending_transaction() {
     recovery_release="$(
       validate_verified_release "${target_digest}" "${state_compose_sha}"
     )"
-    expected_current="releases/$("/usr/bin/basename" "${recovery_release}")"
-    if [[ ! -L "${RUNTIME_CONFIG_CURRENT}" ]] \
-      || [[ "$(/usr/bin/readlink "${RUNTIME_CONFIG_CURRENT}")" != "${expected_current}" ]]
-    then
-      fail "runtime config current pointer does not match completed target state"
-    fi
     if [[ "$(read_env_value PORTFOLIO_IMAGE)" != "${target_image}" ]]; then
       fail "application image environment does not match completed target state"
     fi
@@ -549,6 +549,12 @@ recover_pending_transaction() {
       fail "completed Portfolio target service is not running"
     fi
 
+    expected_current="releases/$("/usr/bin/basename" "${recovery_release}")"
+    if [[ ! -L "${RUNTIME_CONFIG_CURRENT}" ]] \
+      || [[ "$(/usr/bin/readlink "${RUNTIME_CONFIG_CURRENT}")" != "${expected_current}" ]]
+    then
+      replace_current_link "${recovery_release}"
+    fi
     /bin/rm -f -- "${RUNTIME_CONFIG_PENDING}"
     printf 'Completed Portfolio runtime config transaction finalized: %s\n' "${target_image}"
     return 0
@@ -558,8 +564,11 @@ recover_pending_transaction() {
     if [[ -n "${state_image}" || "${previous_digest}" != "${ZERO_DIGEST}" ]]; then
       fail "bootstrap recovery state is inconsistent"
     fi
+    write_image_env "${target_image}"
+    if ! compose_with "${LEGACY_COMPOSE_FILE}" down; then
+      fail "bootstrap recovery could not remove the interrupted target service"
+    fi
     write_image_env ""
-    compose_with "${LEGACY_COMPOSE_FILE}" down || true
     /bin/rm -f -- "${RUNTIME_CONFIG_PENDING}"
     printf 'Interrupted Portfolio bootstrap cleared with the app service removed\n'
     return 0

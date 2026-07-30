@@ -40,6 +40,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
+      deployments: read
       packages: write
     outputs:
       image_digest: ${{ steps.publish.outputs.digest }}
@@ -52,15 +53,54 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Resolve last successful production revision
+        id: deployed-base
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          deployments="$(
+            curl \
+              --fail \
+              --retry 3 \
+              --silent \
+              --show-error \
+              --header "Authorization: Bearer ${GH_TOKEN}" \
+              --header "X-GitHub-Api-Version: 2022-11-28" \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/deployments?environment=Production&per_page=30"
+          )"
+          deployed_sha=0000000000000000000000000000000000000000
+          while IFS=$'\t' read -r deployment_id deployment_sha; do
+            state="$(
+              curl \
+                --fail \
+                --retry 3 \
+                --silent \
+                --show-error \
+                --header "Authorization: Bearer ${GH_TOKEN}" \
+                --header "X-GitHub-Api-Version: 2022-11-28" \
+                "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/deployments/${deployment_id}/statuses?per_page=1" \
+                | jq -r '.[0].state // empty'
+            )"
+            if [[ "${state}" == success ]]; then
+              deployed_sha="${deployment_sha}"
+              break
+            fi
+          done < <(jq -r '.[] | [.id, .sha] | @tsv' <<<"${deployments}")
+          if [[ ! "${deployed_sha}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            printf 'Last successful deployment revision has an unexpected format\n' >&2
+            exit 64
+          fi
+          printf 'sha=%s\n' "${deployed_sha}" >>"${GITHUB_OUTPUT}"
+
       - name: Detect runtime config changes
         id: runtime-config-mode
         env:
-          BEFORE_SHA: ${{ github.event.before || '0000000000000000000000000000000000000000' }}
+          DEPLOYED_SHA: ${{ steps.deployed-base.outputs.sha }}
           FORCE_SYNC: ${{ inputs.sync_runtime_config || false }}
         run: |
           mode="$(
             ./scripts/detect-runtime-config-change.sh \
-              "${BEFORE_SHA}" \
+              "${DEPLOYED_SHA}" \
               "${GITHUB_SHA}" \
               "${FORCE_SYNC}"
           )"

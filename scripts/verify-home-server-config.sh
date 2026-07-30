@@ -156,6 +156,11 @@ if ! /usr/bin/grep -Fq 'runtime_config_mode' "${DEPLOY_WORKFLOW}" \
 then
   fail "runtime config mode와 digest가 deploy job에 연결되지 않았습니다"
 fi
+if ! /usr/bin/grep -Fq 'deployments?environment=Production' "${DEPLOY_WORKFLOW}" \
+  || ! /usr/bin/grep -Fq 'steps.deployed-base.outputs.sha' "${DEPLOY_WORKFLOW}"
+then
+  fail "runtime config 판정이 마지막 성공 Production deployment를 기준으로 하지 않습니다"
+fi
 
 "${DEPLOY_TEST}"
 

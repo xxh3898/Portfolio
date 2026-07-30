@@ -60,6 +60,8 @@ case "${command_name}" in
     if [[ "${arguments}" == *" --format json "* ]]; then
       printf '%s\n' \
         '{"services":{"portfolio":{"networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":{"test":["CMD","true"]}}},"networks":{"edge":{"external":true,"name":"edge"}}}'
+    elif [[ "${arguments}" == *" ps --status running --services "* ]]; then
+      printf 'portfolio\n'
     fi
     ;;
   *)
