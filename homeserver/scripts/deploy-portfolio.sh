@@ -778,6 +778,7 @@ print(entry.get("Health", ""))
   commit_image_env
   if ! compose_with "${recovery_compose}" up \
     --no-build \
+    --pull never \
     --remove-orphans \
     --wait \
     --wait-timeout "${HEALTH_TIMEOUT_SECONDS}"
@@ -935,6 +936,7 @@ if [[ -n "${previous_image}" ]]; then
 
   if compose_with "${previous_compose}" up \
     --no-build \
+    --pull never \
     --remove-orphans \
     --wait \
     --wait-timeout "${HEALTH_TIMEOUT_SECONDS}"

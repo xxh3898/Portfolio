@@ -89,6 +89,7 @@ run_recovery() {
     FAKE_APP_REVISION_ONE="${REVISION_ONE}" \
     FAKE_APP_REVISION_TWO="${REVISION_TWO}" \
     FAKE_APP_REVISION_THREE="${REVISION_THREE}" \
+    FAKE_DOCKER_LOG="${FAKE_DOCKER_LOG:-}" \
     FAKE_SERVICE_HEALTH="${FAKE_SERVICE_HEALTH:-healthy}" \
     /bin/bash "${test_script}" recover
 }
@@ -249,7 +250,9 @@ fi
 /bin/rm -f -- "${state_file}"
 /bin/mv "${state_file}.real" "${state_file}"
 
-run_recovery
+recovery_docker_log="${test_root}/recovery-docker.log"
+FAKE_DOCKER_LOG="${recovery_docker_log}" run_recovery
+/usr/bin/grep -Eq 'compose .* up .*--pull never' "${recovery_docker_log}"
 
 test ! -e "${pending_file}"
 /usr/bin/grep -Fxq \
