@@ -60,6 +60,7 @@ run_deploy() {
         FAKE_RENDER_PROJECT_NAME="${FAKE_RENDER_PROJECT_NAME:-}" \
         FAKE_RENDER_RESTART_POLICY="${FAKE_RENDER_RESTART_POLICY:-}" \
         FAKE_RENDER_SCALE="${FAKE_RENDER_SCALE:-}" \
+        FAKE_RENDER_SECURITY_OPT_JSON="${FAKE_RENDER_SECURITY_OPT_JSON:-}" \
         FAKE_RENDER_TMPFS_JSON="${FAKE_RENDER_TMPFS_JSON:-}" \
         FAKE_RENDER_USER_OVERRIDE="${FAKE_RENDER_USER_OVERRIDE:-}" \
         FAKE_RENDER_WEB_PROFILE="${FAKE_RENDER_WEB_PROFILE:-false}" \
@@ -392,6 +393,21 @@ root_user_exit_code="$?"
 set -e
 if [[ "${root_user_exit_code}" -ne 1 ]]; then
   printf 'Runtime config with a root user override must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_SECURITY_OPT_JSON='["no-new-privileges:true","seccomp=unconfined"]' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+unsafe_security_opt_exit_code="$?"
+set -e
+if [[ "${unsafe_security_opt_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with an extra security option must fail\n' >&2
   exit 1
 fi
 

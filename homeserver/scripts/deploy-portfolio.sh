@@ -341,8 +341,8 @@ if service.get("deploy", {}).get("replicas", 1) != 1:
     raise SystemExit("Portfolio deploy replicas must remain one")
 if service.get("read_only") is not True or service.get("init") is not True:
     raise SystemExit("Portfolio hardening flags are missing")
-if "no-new-privileges:true" not in service.get("security_opt", []):
-    raise SystemExit("Portfolio no-new-privileges is missing")
+if service.get("security_opt") != ["no-new-privileges:true"]:
+    raise SystemExit("Portfolio security options must remain restricted")
 healthcheck = service.get("healthcheck", {})
 if healthcheck.get("disable") is True or healthcheck.get("test") != [
     "CMD",
