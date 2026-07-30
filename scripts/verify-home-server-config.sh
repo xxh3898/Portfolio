@@ -6,13 +6,18 @@ PROJECT_ROOT="${1:-$(
   CDPATH= cd -- "$(dirname -- "$0")/.." && pwd
 )}"
 COMPOSE_FILE="${PROJECT_ROOT}/homeserver/compose.yaml"
+RUNTIME_CONFIG_DOCKERFILE="${PROJECT_ROOT}/homeserver/runtime-config.Dockerfile"
 DEPLOY_SCRIPT="${PROJECT_ROOT}/homeserver/scripts/deploy-portfolio.sh"
 CI_WRAPPER="${PROJECT_ROOT}/homeserver/scripts/deploy-portfolio-ci.sh"
+DETECT_SCRIPT="${PROJECT_ROOT}/scripts/detect-runtime-config-change.sh"
+DEPLOY_TEST="${PROJECT_ROOT}/scripts/test-deploy-portfolio.sh"
 DEPLOY_WORKFLOW="${PROJECT_ROOT}/.github/workflows/deploy.yml"
 IMAGE_REPOSITORY=ghcr.io/xxh3898/portfolio
 DUMMY_DIGEST=sha256:1111111111111111111111111111111111111111111111111111111111111111
 OLD_SHA=1111111111111111111111111111111111111111
+ZERO_SHA=0000000000000000000000000000000000000000
 ZERO_DIGEST=sha256:0000000000000000000000000000000000000000000000000000000000000000
+CURRENT_SHA="$(git -C "${PROJECT_ROOT}" rev-parse HEAD)"
 
 fail() {
   printf '홈서버 설정 검증 실패: %s\n' "$1" >&2
@@ -36,8 +41,11 @@ assert_exit_64() {
 
 for required_file in \
   "${COMPOSE_FILE}" \
+  "${RUNTIME_CONFIG_DOCKERFILE}" \
   "${DEPLOY_SCRIPT}" \
   "${CI_WRAPPER}" \
+  "${DETECT_SCRIPT}" \
+  "${DEPLOY_TEST}" \
   "${DEPLOY_WORKFLOW}"
 do
   if [[ ! -f "${required_file}" ]]; then
@@ -45,7 +53,11 @@ do
   fi
 done
 
-/bin/bash -n "${DEPLOY_SCRIPT}" "${CI_WRAPPER}"
+/bin/bash -n \
+  "${DEPLOY_SCRIPT}" \
+  "${CI_WRAPPER}" \
+  "${DETECT_SCRIPT}" \
+  "${DEPLOY_TEST}"
 
 assert_exit_64 \
   "배포 스크립트가 인자 누락을 거부해야 합니다" \
@@ -64,6 +76,28 @@ assert_exit_64 \
   /usr/bin/env \
     SSH_ORIGINAL_COMMAND="deploy-portfolio ${OLD_SHA} test-user" \
     /bin/bash "${CI_WRAPPER}"
+assert_exit_64 \
+  "CI wrapper가 update digest 누락을 거부해야 합니다" \
+  /usr/bin/env \
+    SSH_ORIGINAL_COMMAND="deploy-portfolio-v2 ${DUMMY_DIGEST} ${OLD_SHA} update test-user" \
+    /bin/bash "${CI_WRAPPER}"
+assert_exit_64 \
+  "CI wrapper가 shell fragment를 거부해야 합니다" \
+  /usr/bin/env \
+    SSH_ORIGINAL_COMMAND="deploy-portfolio-v2 ${DUMMY_DIGEST} ${OLD_SHA} keep test-user; id" \
+    /bin/bash "${CI_WRAPPER}"
+
+if [[ "$("${DETECT_SCRIPT}" "${CURRENT_SHA}" "${CURRENT_SHA}" false)" != keep ]]; then
+  fail "동일 revision은 runtime config keep으로 판정해야 합니다"
+fi
+
+if [[ "$("${DETECT_SCRIPT}" "${ZERO_SHA}" "${OLD_SHA}" false)" != update ]]; then
+  fail "최초 배포는 runtime config update로 판정해야 합니다"
+fi
+
+if [[ "$("${DETECT_SCRIPT}" "${CURRENT_SHA}" "${CURRENT_SHA}" true)" != update ]]; then
+  fail "강제 동기화는 runtime config update로 판정해야 합니다"
+fi
 
 if ! command -v docker >/dev/null 2>&1; then
   fail "Docker CLI를 찾을 수 없습니다"
@@ -117,6 +151,14 @@ if ! /usr/bin/grep -Fq 'needs.publish.outputs.image_digest' "${DEPLOY_WORKFLOW}"
   fail "publish digest가 deploy job에 연결되지 않았습니다"
 fi
 
+if ! /usr/bin/grep -Fq 'runtime_config_mode' "${DEPLOY_WORKFLOW}" \
+  || ! /usr/bin/grep -Fq 'runtime_config_digest' "${DEPLOY_WORKFLOW}"
+then
+  fail "runtime config mode와 digest가 deploy job에 연결되지 않았습니다"
+fi
+
+"${DEPLOY_TEST}"
+
 printf '홈서버 설정 검증 통과\n'
 printf -- '- Compose image: %s@%s\n' "${IMAGE_REPOSITORY}" "${DUMMY_DIGEST}"
-printf -- '- 배포 입력: sha256 digest\n'
+printf -- '- 배포 입력: application digest + runtime config keep/update\n'

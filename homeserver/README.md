@@ -7,7 +7,10 @@
 
 ```text
 homeserver/compose.yaml
-  -> /Users/homeserver/Server/apps/portfolio/compose.yaml
+  -> runtime-config image의 /runtime/compose.yaml
+
+homeserver/runtime-config.Dockerfile
+  -> ghcr.io/xxh3898/portfolio-runtime-config:<commit-sha>
 
 homeserver/scripts/deploy-portfolio.sh
   -> /Users/homeserver/Server/scripts/deploy/deploy-portfolio.sh
@@ -25,11 +28,18 @@ GitHub Actions의 forced-command SSH는 다음 형식만 허용한다.
 
 ```text
 deploy-portfolio <sha256:image-digest> <registry-user>
+deploy-portfolio-v2 <sha256:image-digest> <commit-sha> keep <registry-user>
+deploy-portfolio-v2 <sha256:image-digest> <commit-sha> update <sha256:config-digest> <registry-user>
 ```
 
-배포 스크립트는 digest image를 pull하고 Compose health를 확인한다.
-실패하면 직전 정상 digest로 돌아가며, 첫 digest 전환 중에는 기존 40자리 SHA tag도
-직전 정상 image로 인정한다.
+`homeserver/compose.yaml` 또는 `homeserver/runtime-config.Dockerfile`이 변경된
+배포만 새 runtime-config image를 게시하고 `update`를 사용한다. 애플리케이션만
+변경된 배포는 `keep`으로 현재 검증된 config digest를 유지한다. 첫 전환 또는
+drift 복구는 `workflow_dispatch`의 `sync_runtime_config`를 사용한다.
+
+배포 스크립트는 application/config exact digest와 revision을 검증하고 Compose
+health를 확인한다. 실패하면 직전 정상 application/config 쌍으로 돌아간다.
+기존 v1 명령은 v2 전환 기간에만 유지한다.
 
 ## 검증
 
@@ -39,11 +49,12 @@ deploy-portfolio <sha256:image-digest> <registry-user>
 ./scripts/verify-home-server-config.sh
 ```
 
-운영 파일을 동기화한 뒤에는 Mac mini에서 `bash -n`, 현재 `.env`를 사용한
-`docker compose config --quiet`, repository copy와 live file의 SHA-256 일치를
-확인한다. 파일 동기화만으로 운영 container를 재시작하지 않는다.
+v2 스크립트를 설치한 뒤에는 Mac mini에서 `bash -n`과 wrapper 입력 거부를
+확인한다. runtime config는 배포 중 candidate release에서 현재 `.env`를 사용해
+`docker compose config --quiet`를 통과한 뒤에만 current state가 된다.
 
 ## 롤백
 
-운영 파일 동기화에 문제가 있으면 동기화 직전 만든 개별 backup으로 세 파일을
-복원하고 구문, Compose 설정, 권한과 SHA-256을 다시 확인한다.
+운영 script 설치에 문제가 있으면 설치 직전 만든 개별 backup으로 script를
+복원한다. v2 배포 실패 시 state에 기록된 직전 application image와 runtime
+config release를 함께 적용한다.
