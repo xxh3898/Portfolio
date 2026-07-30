@@ -60,6 +60,8 @@ run_deploy() {
         FAKE_RENDER_PROJECT_NAME="${FAKE_RENDER_PROJECT_NAME:-}" \
         FAKE_RENDER_POST_START_JSON="${FAKE_RENDER_POST_START_JSON:-}" \
         FAKE_RENDER_PID_MODE_JSON="${FAKE_RENDER_PID_MODE_JSON:-}" \
+        FAKE_RENDER_PIDS_LIMIT="${FAKE_RENDER_PIDS_LIMIT:-}" \
+        FAKE_RENDER_LOGGING_JSON="${FAKE_RENDER_LOGGING_JSON:-}" \
         FAKE_RENDER_RESTART_POLICY="${FAKE_RENDER_RESTART_POLICY:-}" \
         FAKE_RENDER_SCALE="${FAKE_RENDER_SCALE:-}" \
         FAKE_RENDER_SECURITY_OPT_JSON="${FAKE_RENDER_SECURITY_OPT_JSON:-}" \
@@ -472,6 +474,28 @@ host_namespace_exit_code="$?"
 set -e
 if [[ "${host_namespace_exit_code}" -ne 1 ]]; then
   printf 'Runtime config with host PID namespace must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_PIDS_LIMIT=-1 \
+  run_deploy "${APP_DIGEST_THREE}" "${REVISION_THREE}" keep test-user \
+  >/dev/null 2>&1
+unbounded_pids_exit_code="$?"
+set -e
+if [[ "${unbounded_pids_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with an unbounded PID limit must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_LOGGING_JSON='{"driver":"json-file"}' \
+  run_deploy "${APP_DIGEST_THREE}" "${REVISION_THREE}" keep test-user \
+  >/dev/null 2>&1
+unbounded_logging_exit_code="$?"
+set -e
+if [[ "${unbounded_logging_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config without bounded log rotation must fail\n' >&2
   exit 1
 fi
 

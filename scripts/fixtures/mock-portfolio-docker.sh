@@ -105,8 +105,10 @@ case "${command_name}" in
       volumes_from_json="${FAKE_RENDER_VOLUMES_FROM_JSON:-null}"
       use_api_socket="${FAKE_RENDER_USE_API_SOCKET:-false}"
       pid_mode_json="${FAKE_RENDER_PID_MODE_JSON:-null}"
+      pids_limit="${FAKE_RENDER_PIDS_LIMIT:-100}"
+      logging_json="${FAKE_RENDER_LOGGING_JSON:-{\"driver\":\"json-file\",\"options\":{\"max-size\":\"10m\",\"max-file\":\"3\"}}}"
       printf \
-        '{"name":"%s","services":{"portfolio":{"image":"%s","restart":"%s","user":"%s","scale":%s,"profiles":%s,"post_start":%s,"volumes_from":%s,"use_api_socket":%s,"pid":%s,"networks":{"edge":null},"read_only":true,"init":true,"security_opt":%s,"tmpfs":%s,"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
+        '{"name":"%s","services":{"portfolio":{"image":"%s","restart":"%s","user":"%s","scale":%s,"profiles":%s,"post_start":%s,"volumes_from":%s,"use_api_socket":%s,"pid":%s,"pids_limit":%s,"logging":%s,"networks":{"edge":null},"read_only":true,"init":true,"security_opt":%s,"tmpfs":%s,"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
         "${project_name}" \
         "${rendered_image}" \
         "${restart_policy}" \
@@ -117,6 +119,8 @@ case "${command_name}" in
         "${volumes_from_json}" \
         "${use_api_socket}" \
         "${pid_mode_json}" \
+        "${pids_limit}" \
+        "${logging_json}" \
         "${security_opt_json}" \
         "${tmpfs_json}" \
         "${healthcheck_json}"

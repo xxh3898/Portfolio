@@ -380,8 +380,15 @@ if service.get("deploy", {}).get("replicas", 1) != 1:
     raise SystemExit("Portfolio deploy replicas must remain one")
 if service.get("read_only") is not True or service.get("init") is not True:
     raise SystemExit("Portfolio hardening flags are missing")
+if service.get("pids_limit") != 100:
+    raise SystemExit("Portfolio PID limit must remain 100")
 if service.get("security_opt") != ["no-new-privileges:true"]:
     raise SystemExit("Portfolio security options must remain restricted")
+if service.get("logging") != {
+    "driver": "json-file",
+    "options": {"max-file": "3", "max-size": "10m"},
+}:
+    raise SystemExit("Portfolio logging rotation contract is invalid")
 healthcheck = service.get("healthcheck", {})
 if healthcheck.get("disable") is True or healthcheck.get("test") != [
     "CMD",
