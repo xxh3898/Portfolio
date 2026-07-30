@@ -52,11 +52,13 @@ run_deploy() {
         FAKE_APP_REVISION_TWO="${REVISION_TWO}" \
         FAKE_APP_REVISION_THREE="${REVISION_THREE}" \
         FAKE_DOCKER_LOG="${FAKE_DOCKER_LOG:-}" \
+        FAKE_DISABLE_HEALTHCHECK="${FAKE_DISABLE_HEALTHCHECK:-false}" \
         FAKE_FAIL_CP="${FAKE_FAIL_CP:-false}" \
         FAKE_FAIL_UP="${FAKE_FAIL_UP:-false}" \
         FAKE_RENDER_IMAGE="${FAKE_RENDER_IMAGE:-}" \
         FAKE_RENDER_PROJECT_NAME="${FAKE_RENDER_PROJECT_NAME:-}" \
         FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN="${FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN:-false}" \
+        FAKE_SERVICE_HEALTH="${FAKE_SERVICE_HEALTH:-healthy}" \
         /bin/bash "${test_script}" "$@"
 }
 
@@ -69,7 +71,8 @@ run_recovery() {
     FAKE_APP_REVISION_ONE="${REVISION_ONE}" \
     FAKE_APP_REVISION_TWO="${REVISION_TWO}" \
     FAKE_APP_REVISION_THREE="${REVISION_THREE}" \
-        /bin/bash "${test_script}" recover
+    FAKE_SERVICE_HEALTH="${FAKE_SERVICE_HEALTH:-healthy}" \
+    /bin/bash "${test_script}" recover
 }
 
 bootstrap_docker_log="${test_root}/bootstrap-docker.log"
@@ -186,6 +189,15 @@ release_two="${app_dir}/runtime-config/releases/${CONFIG_DIGEST_TWO#sha256:}"
 printf 'PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_THREE}" \
   >"${app_dir}/.env"
 
+set +e
+FAKE_SERVICE_HEALTH=unhealthy run_recovery >/dev/null 2>&1
+unhealthy_recovery_exit_code="$?"
+set -e
+if [[ "${unhealthy_recovery_exit_code}" -ne 65 || ! -f "${pending_file}" ]]; then
+  printf 'Completed target recovery must retain pending when unhealthy\n' >&2
+  exit 1
+fi
+
 run_recovery
 
 test "$(/usr/bin/readlink "${app_dir}/runtime-config/current")" \
@@ -213,6 +225,21 @@ if [[ "${recovery_exit_code}" -ne 65 || ! -f "${pending_file}" ]]; then
   exit 1
 fi
 /bin/rm -f -- "${pending_file}"
+
+set +e
+FAKE_DISABLE_HEALTHCHECK=true \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+disabled_healthcheck_exit_code="$?"
+set -e
+if [[ "${disabled_healthcheck_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a disabled healthcheck must fail\n' >&2
+  exit 1
+fi
 
 set +e
 FAKE_RENDER_PROJECT_NAME=unexpected \
@@ -272,6 +299,22 @@ fi
 
 release_dir="${release_one}"
 printf '\n# tampered\n' >>"${release_dir}/compose.yaml"
+
+set +e
+run_deploy \
+  "${APP_DIGEST_THREE}" \
+  "${REVISION_THREE}" \
+  update \
+  "${CONFIG_DIGEST_TWO}" \
+  test-user \
+  >/dev/null 2>&1
+update_exit_code="$?"
+set -e
+
+if [[ "${update_exit_code}" -ne 65 ]]; then
+  printf 'Update with a tampered active runtime config must fail: actual=%s\n' "${update_exit_code}" >&2
+  exit 1
+fi
 
 set +e
 run_deploy \

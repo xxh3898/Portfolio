@@ -76,13 +76,21 @@ case "${command_name}" in
         exit 1
       fi
     fi
-    if [[ "${arguments}" == *" --format json "* ]]; then
+    if [[ "${arguments}" == *" ps --format json portfolio "* ]]; then
+      printf '[{"Service":"portfolio","Health":"%s"}]\n' \
+        "${FAKE_SERVICE_HEALTH:-healthy}"
+    elif [[ "${arguments}" == *" --format json "* ]]; then
       rendered_image="${FAKE_RENDER_IMAGE:-${PORTFOLIO_IMAGE}}"
       project_name="${FAKE_RENDER_PROJECT_NAME:-portfolio}"
+      healthcheck_json='{"test":["CMD","wget","-q","-O","/dev/null","http://127.0.0.1:8080/health"]}'
+      if [[ "${FAKE_DISABLE_HEALTHCHECK:-false}" == true ]]; then
+        healthcheck_json='{"disable":true}'
+      fi
       printf \
-        '{"name":"%s","services":{"portfolio":{"image":"%s","networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":{"test":["CMD","true"]}}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
+        '{"name":"%s","services":{"portfolio":{"image":"%s","networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
         "${project_name}" \
-        "${rendered_image}"
+        "${rendered_image}" \
+        "${healthcheck_json}"
     elif [[ "${arguments}" == *" ps --status running --services "* ]]; then
       printf 'portfolio\n'
     fi

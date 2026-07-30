@@ -315,8 +315,16 @@ if service.get("read_only") is not True or service.get("init") is not True:
     raise SystemExit("Portfolio hardening flags are missing")
 if "no-new-privileges:true" not in service.get("security_opt", []):
     raise SystemExit("Portfolio no-new-privileges is missing")
-if not service.get("healthcheck"):
-    raise SystemExit("Portfolio healthcheck is missing")
+healthcheck = service.get("healthcheck", {})
+if healthcheck.get("disable") is True or healthcheck.get("test") != [
+    "CMD",
+    "wget",
+    "-q",
+    "-O",
+    "/dev/null",
+    "http://127.0.0.1:8080/health",
+]:
+    raise SystemExit("Portfolio healthcheck contract is invalid")
 edge = networks.get("edge", {})
 if edge.get("external") is not True or edge.get("name") != "edge":
     raise SystemExit("Portfolio edge network contract is invalid")
@@ -556,6 +564,20 @@ recover_pending_transaction() {
     if [[ "${running_services}" != portfolio ]]; then
       fail "completed Portfolio target service is not running"
     fi
+    health_status="$(
+      compose_with "${recovery_compose}" ps --format json portfolio \
+        | "${PYTHON_BIN}" -c '
+import json
+import sys
+
+value = json.load(sys.stdin)
+entry = value[0] if isinstance(value, list) else value
+print(entry.get("Health", ""))
+'
+    )"
+    if [[ "${health_status}" != healthy ]]; then
+      fail "completed Portfolio target service is not healthy"
+    fi
 
     expected_current="releases/$("/usr/bin/basename" "${recovery_release}")"
     if [[ ! -L "${RUNTIME_CONFIG_CURRENT}" ]] \
@@ -650,6 +672,26 @@ else
   current_config_revision="$(read_state_value RUNTIME_CONFIG_REVISION)"
   current_config_compose_sha256="$(read_state_value RUNTIME_CONFIG_COMPOSE_SHA256)"
 
+  if [[ -e "${RUNTIME_CONFIG_STATE}" ]]; then
+    if [[ ! -f "${RUNTIME_CONFIG_STATE}" || -L "${RUNTIME_CONFIG_STATE}" ]] \
+      || ! is_digest "${current_config_digest}" \
+      || [[ ! "${current_config_revision}" =~ ^[0-9a-f]{40}$ ]] \
+      || [[ ! "${current_config_compose_sha256}" =~ ^[0-9a-f]{64}$ ]]
+    then
+      fail "current runtime config state is invalid"
+    fi
+    current_release="$(release_dir_for_digest "${current_config_digest}")"
+    if [[ ! -d "${current_release}" ]]; then
+      fail "current runtime config release is missing"
+    fi
+    validate_release_files "${current_release}"
+    if [[ "$(compose_sha256 "${current_release}/compose.yaml")" != "${current_config_compose_sha256}" ]]; then
+      fail "current runtime config release integrity check failed"
+    fi
+  else
+    current_release=
+  fi
+
   if [[ "${config_mode}" == update ]]; then
     candidate_config_digest="${config_digest}"
     candidate_config_revision="${revision}"
@@ -659,23 +701,12 @@ else
       compose_sha256 "${candidate_release}/compose.yaml"
     )"
   else
-    if ! is_digest "${current_config_digest}" \
-      || [[ ! "${current_config_revision}" =~ ^[0-9a-f]{40}$ ]]
-    then
+    if [[ -z "${current_release}" ]]; then
       fail "keep mode requires an existing verified runtime config state"
     fi
     candidate_config_digest="${current_config_digest}"
     candidate_config_revision="${current_config_revision}"
-    candidate_release="$(release_dir_for_digest "${current_config_digest}")"
-    if [[ ! -d "${candidate_release}" ]]; then
-      fail "current runtime config release is missing"
-    fi
-    validate_release_files "${candidate_release}"
-    if [[ ! "${current_config_compose_sha256}" =~ ^[0-9a-f]{64}$ ]] \
-      || [[ "$(compose_sha256 "${candidate_release}/compose.yaml")" != "${current_config_compose_sha256}" ]]
-    then
-      fail "current runtime config release integrity check failed"
-    fi
+    candidate_release="${current_release}"
     candidate_config_compose_sha256="${current_config_compose_sha256}"
   fi
 
