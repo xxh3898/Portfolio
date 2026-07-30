@@ -320,6 +320,8 @@ if set(service.get("networks", {})) != {"edge"}:
     raise SystemExit("Portfolio must only join edge")
 if service.get("ports"):
     raise SystemExit("Portfolio must not publish host ports")
+if service.get("profiles"):
+    raise SystemExit("Portfolio must not use Compose profiles")
 if service.get("read_only") is not True or service.get("init") is not True:
     raise SystemExit("Portfolio hardening flags are missing")
 if "no-new-privileges:true" not in service.get("security_opt", []):

@@ -92,10 +92,15 @@ case "${command_name}" in
       if [[ "${FAKE_DISABLE_HEALTHCHECK:-false}" == true ]]; then
         healthcheck_json='{"disable":true}'
       fi
+      profiles_json='[]'
+      if [[ "${FAKE_RENDER_WEB_PROFILE:-false}" == true ]]; then
+        profiles_json='["optional"]'
+      fi
       printf \
-        '{"name":"%s","services":{"portfolio":{"image":"%s","networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
+        '{"name":"%s","services":{"portfolio":{"image":"%s","profiles":%s,"networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
         "${project_name}" \
         "${rendered_image}" \
+        "${profiles_json}" \
         "${healthcheck_json}"
     elif [[ "${arguments}" == *" ps --status running --services "* ]]; then
       printf 'portfolio\n'
