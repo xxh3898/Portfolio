@@ -98,11 +98,13 @@ case "${command_name}" in
       fi
       restart_policy="${FAKE_RENDER_RESTART_POLICY:-unless-stopped}"
       scale="${FAKE_RENDER_SCALE:-1}"
+      user_override="${FAKE_RENDER_USER_OVERRIDE:-}"
       printf \
-        '{"name":"%s","services":{"portfolio":{"image":"%s","restart":"%s","scale":%s,"profiles":%s,"networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
+        '{"name":"%s","services":{"portfolio":{"image":"%s","restart":"%s","user":"%s","scale":%s,"profiles":%s,"networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":%s}},"networks":{"edge":{"external":true,"name":"edge"}}}\n' \
         "${project_name}" \
         "${rendered_image}" \
         "${restart_policy}" \
+        "${user_override}" \
         "${scale}" \
         "${profiles_json}" \
         "${healthcheck_json}"

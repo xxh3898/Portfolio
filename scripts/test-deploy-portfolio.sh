@@ -60,6 +60,7 @@ run_deploy() {
         FAKE_RENDER_PROJECT_NAME="${FAKE_RENDER_PROJECT_NAME:-}" \
         FAKE_RENDER_RESTART_POLICY="${FAKE_RENDER_RESTART_POLICY:-}" \
         FAKE_RENDER_SCALE="${FAKE_RENDER_SCALE:-}" \
+        FAKE_RENDER_USER_OVERRIDE="${FAKE_RENDER_USER_OVERRIDE:-}" \
         FAKE_RENDER_WEB_PROFILE="${FAKE_RENDER_WEB_PROFILE:-false}" \
         FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN="${FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN:-false}" \
         FAKE_SERVICE_HEALTH="${FAKE_SERVICE_HEALTH:-healthy}" \
@@ -349,6 +350,21 @@ wrong_restart_exit_code="$?"
 set -e
 if [[ "${wrong_restart_exit_code}" -ne 1 ]]; then
   printf 'Runtime config with a changed restart policy must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_USER_OVERRIDE=0 \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+root_user_exit_code="$?"
+set -e
+if [[ "${root_user_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a root user override must fail\n' >&2
   exit 1
 fi
 

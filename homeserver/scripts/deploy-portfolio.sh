@@ -324,6 +324,13 @@ if service.get("profiles"):
     raise SystemExit("Portfolio must not use Compose profiles")
 if service.get("restart") != "unless-stopped":
     raise SystemExit("Portfolio restart policy must remain unless-stopped")
+if (
+    service.get("user") not in (None, "")
+    or service.get("privileged") is True
+    or service.get("cap_add")
+    or service.get("devices")
+):
+    raise SystemExit("Portfolio must not override image user or add privileges")
 if service.get("scale", 1) != 1:
     raise SystemExit("Portfolio must run exactly one replica")
 if service.get("deploy", {}).get("replicas", 1) != 1:
