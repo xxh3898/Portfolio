@@ -63,9 +63,35 @@ run_recovery() {
     FAKE_APP_REVISION_ONE="${REVISION_ONE}" \
     FAKE_APP_REVISION_TWO="${REVISION_TWO}" \
     FAKE_APP_REVISION_THREE="${REVISION_THREE}" \
-    /bin/bash "${test_script}" recover
+        /bin/bash "${test_script}" recover
 }
 
+bootstrap_docker_log="${test_root}/bootstrap-docker.log"
+printf 'PORTFOLIO_IMAGE=\n' >"${app_dir}/.env"
+set +e
+FAKE_FAIL_UP=true \
+FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN=true \
+FAKE_DOCKER_LOG="${bootstrap_docker_log}" \
+  run_deploy \
+    "${APP_DIGEST_ONE}" \
+    "${REVISION_ONE}" \
+    update \
+    "${CONFIG_DIGEST}" \
+    test-user \
+    >/dev/null 2>&1
+bootstrap_exit_code="$?"
+set -e
+if [[ "${bootstrap_exit_code}" -eq 0 ]]; then
+  printf 'Failed first deployment must fail after teardown\n' >&2
+  exit 1
+fi
+/usr/bin/grep -Fq 'compose ' "${bootstrap_docker_log}"
+/usr/bin/grep -Fq ' down' "${bootstrap_docker_log}"
+/usr/bin/grep -Fxq 'PORTFOLIO_IMAGE=' "${app_dir}/.env"
+test ! -e "${app_dir}/runtime-config/pending"
+
+printf 'PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_ONE}" \
+  >"${app_dir}/.env"
 run_deploy \
   "${APP_DIGEST_ONE}" \
   "${REVISION_ONE}" \

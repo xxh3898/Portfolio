@@ -744,8 +744,9 @@ if [[ -n "${previous_image}" ]]; then
   fi
 else
   printf 'No previous immutable image exists; removing failed first deployment\n' >&2
-  write_image_env "${current_image}"
+  write_image_env "${new_image}"
   if compose_with "${candidate_compose}" down; then
+    write_image_env "${current_image}"
     if [[ "${legacy_mode}" == false ]]; then
       /bin/rm -f -- "${RUNTIME_CONFIG_PENDING}"
     fi

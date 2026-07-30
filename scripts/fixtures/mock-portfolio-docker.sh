@@ -57,6 +57,25 @@ case "${command_name}" in
     ;;
   compose)
     arguments=" $* "
+    if [[ "${arguments}" == *" up "* && "${FAKE_FAIL_UP:-false}" == true ]]; then
+      exit 1
+    fi
+    if [[ "${arguments}" == *" down "* && "${FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN:-false}" == true ]]; then
+      env_file=
+      previous_argument=
+      for argument in "$@"; do
+        if [[ "${previous_argument}" == --env-file ]]; then
+          env_file="${argument}"
+          break
+        fi
+        previous_argument="${argument}"
+      done
+      if [[ -z "${env_file}" ]] \
+        || ! /usr/bin/grep -Eq '^PORTFOLIO_IMAGE=ghcr\.io/xxh3898/portfolio@sha256:[0-9a-f]{64}$' "${env_file}"
+      then
+        exit 1
+      fi
+    fi
     if [[ "${arguments}" == *" --format json "* ]]; then
       printf '%s\n' \
         '{"services":{"portfolio":{"networks":{"edge":null},"read_only":true,"init":true,"security_opt":["no-new-privileges:true"],"healthcheck":{"test":["CMD","true"]}}},"networks":{"edge":{"external":true,"name":"edge"}}}'
