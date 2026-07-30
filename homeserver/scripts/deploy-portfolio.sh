@@ -330,6 +330,10 @@ if (
     or service.get("cap_add")
     or service.get("devices")
     or service.get("use_api_socket") is True
+    or service.get("pid") is not None
+    or service.get("ipc") is not None
+    or service.get("uts") is not None
+    or service.get("userns_mode") is not None
 ):
     raise SystemExit("Portfolio must not override image user or add privileges")
 if (
