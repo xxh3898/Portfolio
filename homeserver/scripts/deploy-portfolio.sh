@@ -343,6 +343,8 @@ if service.get("image") != expected_image:
     raise SystemExit("Portfolio image does not match the requested deployment")
 if set(service.get("networks", {})) != {"edge"}:
     raise SystemExit("Portfolio must only join edge")
+if service.get("networks", {}).get("edge") is not None:
+    raise SystemExit("Portfolio edge attachment must not define aliases or options")
 if service.get("ports"):
     raise SystemExit("Portfolio must not publish host ports")
 if service.get("profiles"):
