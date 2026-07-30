@@ -24,6 +24,7 @@ usage() {
     '  deploy-portfolio.sh <image-digest> <registry-user>' \
     '  deploy-portfolio.sh <image-digest> <commit-sha> keep <registry-user>' \
     '  deploy-portfolio.sh <image-digest> <commit-sha> update <config-digest> <registry-user>' \
+    '  deploy-portfolio.sh recover' \
     >&2
 }
 
@@ -37,11 +38,22 @@ is_digest() {
 }
 
 legacy_mode=false
+recovery_mode=false
 config_mode=legacy
 revision=
 config_digest=
+image_digest=
+registry_user=
 
 case "$#" in
+  1)
+    if [[ "$1" != recover ]]; then
+      usage
+      exit 64
+    fi
+    recovery_mode=true
+    config_mode=recover
+    ;;
   2)
     legacy_mode=true
     image_digest="$1"
@@ -74,11 +86,11 @@ case "$#" in
     ;;
 esac
 
-if ! is_digest "${image_digest}"; then
+if [[ "${recovery_mode}" == false ]] && ! is_digest "${image_digest}"; then
   fail "image digest must use sha256 followed by 64 lowercase hexadecimal characters" 64
 fi
 
-if [[ "${legacy_mode}" == false ]] \
+if [[ "${legacy_mode}" == false && "${recovery_mode}" == false ]] \
   && { [[ ! "${revision}" =~ ^[0-9a-f]{40}$ ]] || [[ "${revision}" == "${ZERO_SHA}" ]]; }
 then
   fail "commit SHA must contain 40 lowercase hexadecimal characters" 64
@@ -88,7 +100,7 @@ if [[ "${config_mode}" == update ]] && ! is_digest "${config_digest}"; then
   fail "runtime config digest must use sha256 followed by 64 lowercase hexadecimal characters" 64
 fi
 
-if [[ ! "${registry_user}" =~ ^[A-Za-z0-9_-]+$ ]]; then
+if [[ "${recovery_mode}" == false && ! "${registry_user}" =~ ^[A-Za-z0-9_-]+$ ]]; then
   fail "registry user contains unsupported characters" 64
 fi
 
@@ -104,13 +116,16 @@ if [[ ! -f "${LEGACY_COMPOSE_FILE}" || ! -f "${ENV_FILE}" ]]; then
   fail "production Compose configuration is incomplete" 66
 fi
 
-if [[ "${legacy_mode}" == false && -e "${RUNTIME_CONFIG_PENDING}" ]]; then
+if [[ "${legacy_mode}" == false && "${recovery_mode}" == false && -e "${RUNTIME_CONFIG_PENDING}" ]]; then
   fail "an incomplete runtime config transaction requires recovery" 75
 fi
 
-registry_token="$(/bin/cat)"
-if [[ -z "${registry_token}" ]]; then
-  fail "GHCR token must not be empty" 64
+registry_token=
+if [[ "${recovery_mode}" == false ]]; then
+  registry_token="$(/bin/cat)"
+  if [[ -z "${registry_token}" ]]; then
+    fail "GHCR token must not be empty" 64
+  fi
 fi
 
 umask 077
@@ -124,6 +139,7 @@ pending_temp=
 release_temp=
 current_link_temp=
 config_container_id=
+prepared_release=
 logged_in=false
 
 # shellcheck disable=SC2329
@@ -354,13 +370,13 @@ prepare_runtime_release() {
     fi
     /bin/rm -rf -- "${release_temp}"
     release_temp=
-    printf '%s\n' "${release_dir}"
+    prepared_release="${release_dir}"
     return 0
   fi
 
   /bin/mv -- "${release_temp}" "${release_dir}"
   release_temp=
-  printf '%s\n' "${release_dir}"
+  prepared_release="${release_dir}"
 }
 
 write_pending_state() {
@@ -412,10 +428,174 @@ write_success_state() {
 
   current_link_temp="${RUNTIME_CONFIG_ROOT}/.current.$$"
   /bin/ln -s "releases/$("/usr/bin/basename" "${release_dir}")" "${current_link_temp}"
-  /bin/mv -f -- "${current_link_temp}" "${RUNTIME_CONFIG_CURRENT}"
+  "${PYTHON_BIN}" -c \
+    'import os, sys; os.replace(sys.argv[1], sys.argv[2])' \
+    "${current_link_temp}" \
+    "${RUNTIME_CONFIG_CURRENT}"
   current_link_temp=
   /bin/rm -f -- "${RUNTIME_CONFIG_PENDING}"
 }
+
+read_pending_value() {
+  local key="$1"
+  local value
+
+  value="$(
+    /usr/bin/awk -F= -v key="${key}" '
+      $1 == key {
+        value = substr($0, index($0, "=") + 1)
+        count += 1
+      }
+      END {
+        if (count != 1) {
+          exit 1
+        }
+        print value
+      }
+    ' "${RUNTIME_CONFIG_PENDING}"
+  )" || fail "${key} must appear exactly once in ${RUNTIME_CONFIG_PENDING}"
+
+  printf '%s' "${value}"
+}
+
+validate_pending_state() {
+  local keys
+
+  if [[ ! -f "${RUNTIME_CONFIG_PENDING}" || -L "${RUNTIME_CONFIG_PENDING}" ]]; then
+    fail "runtime config recovery requires a regular pending state file"
+  fi
+
+  keys="$(
+    /usr/bin/awk -F= 'NF >= 2 { print $1 }' "${RUNTIME_CONFIG_PENDING}" \
+      | LC_ALL=C /usr/bin/sort
+  )"
+  if [[ "${keys}" != $'PREVIOUS_APPLICATION_IMAGE\nPREVIOUS_RUNTIME_CONFIG_DIGEST\nTARGET_APPLICATION_IMAGE\nTARGET_RUNTIME_CONFIG_DIGEST' ]]; then
+    fail "runtime config pending state keys are invalid"
+  fi
+}
+
+validate_verified_release() {
+  local digest="$1"
+  local expected_compose_sha="$2"
+  local release_dir
+
+  if ! is_digest "${digest}" || [[ ! "${expected_compose_sha}" =~ ^[0-9a-f]{64}$ ]]; then
+    fail "runtime config state is invalid"
+  fi
+
+  release_dir="$(release_dir_for_digest "${digest}")"
+  if [[ ! -d "${release_dir}" ]]; then
+    fail "runtime config release is missing during recovery"
+  fi
+  validate_release_files "${release_dir}"
+  if [[ "$(compose_sha256 "${release_dir}/compose.yaml")" != "${expected_compose_sha}" ]]; then
+    fail "runtime config release integrity check failed during recovery"
+  fi
+
+  printf '%s' "${release_dir}"
+}
+
+recover_pending_transaction() {
+  local previous_image
+  local previous_digest
+  local target_image
+  local target_digest
+  local state_image
+  local state_digest
+  local state_compose_sha
+  local recovery_release
+  local recovery_compose
+  local expected_current
+  local running_services
+
+  validate_pending_state
+  previous_image="$(read_pending_value PREVIOUS_APPLICATION_IMAGE)"
+  previous_digest="$(read_pending_value PREVIOUS_RUNTIME_CONFIG_DIGEST)"
+  target_image="$(read_pending_value TARGET_APPLICATION_IMAGE)"
+  target_digest="$(read_pending_value TARGET_RUNTIME_CONFIG_DIGEST)"
+
+  if { [[ -n "${previous_image}" ]] && ! is_approved_image "${previous_image}"; } \
+    || ! is_approved_image "${target_image}" \
+    || [[ ! "${previous_digest}" =~ ^sha256:[0-9a-f]{64}$ ]] \
+    || ! is_digest "${target_digest}"
+  then
+    fail "runtime config pending state values are invalid"
+  fi
+
+  state_image="$(read_state_value APPLICATION_IMAGE)"
+  state_digest="$(read_state_value RUNTIME_CONFIG_DIGEST)"
+  state_compose_sha="$(read_state_value RUNTIME_CONFIG_COMPOSE_SHA256)"
+
+  if [[ "${state_image}" == "${target_image}" && "${state_digest}" == "${target_digest}" ]]; then
+    recovery_release="$(
+      validate_verified_release "${target_digest}" "${state_compose_sha}"
+    )"
+    expected_current="releases/$("/usr/bin/basename" "${recovery_release}")"
+    if [[ ! -L "${RUNTIME_CONFIG_CURRENT}" ]] \
+      || [[ "$(/usr/bin/readlink "${RUNTIME_CONFIG_CURRENT}")" != "${expected_current}" ]]
+    then
+      fail "runtime config current pointer does not match completed target state"
+    fi
+    if [[ "$(read_env_value PORTFOLIO_IMAGE)" != "${target_image}" ]]; then
+      fail "application image environment does not match completed target state"
+    fi
+
+    recovery_compose="${recovery_release}/compose.yaml"
+    validate_compose_contract "${recovery_compose}" "${target_image}"
+    running_services="$(
+      compose_with "${recovery_compose}" ps --status running --services
+    )"
+    if [[ "${running_services}" != portfolio ]]; then
+      fail "completed Portfolio target service is not running"
+    fi
+
+    /bin/rm -f -- "${RUNTIME_CONFIG_PENDING}"
+    printf 'Completed Portfolio runtime config transaction finalized: %s\n' "${target_image}"
+    return 0
+  fi
+
+  if [[ -z "${previous_image}" ]]; then
+    if [[ -n "${state_image}" || "${previous_digest}" != "${ZERO_DIGEST}" ]]; then
+      fail "bootstrap recovery state is inconsistent"
+    fi
+    write_image_env ""
+    compose_with "${LEGACY_COMPOSE_FILE}" down || true
+    /bin/rm -f -- "${RUNTIME_CONFIG_PENDING}"
+    printf 'Interrupted Portfolio bootstrap cleared with the app service removed\n'
+    return 0
+  fi
+
+  if [[ -z "${state_image}" && -z "${state_digest}" && "${previous_digest}" == "${ZERO_DIGEST}" ]]; then
+    recovery_compose="${LEGACY_COMPOSE_FILE}"
+  else
+    if [[ "${state_image}" != "${previous_image}" || "${state_digest}" != "${previous_digest}" ]]; then
+      fail "pending transaction does not match the last verified runtime config state"
+    fi
+    recovery_release="$(
+      validate_verified_release "${previous_digest}" "${state_compose_sha}"
+    )"
+    recovery_compose="${recovery_release}/compose.yaml"
+  fi
+
+  validate_compose_contract "${recovery_compose}" "${previous_image}"
+  write_image_env "${previous_image}"
+  if ! compose_with "${recovery_compose}" up \
+    --no-build \
+    --remove-orphans \
+    --wait \
+    --wait-timeout "${HEALTH_TIMEOUT_SECONDS}"
+  then
+    fail "runtime config recovery could not restore the previous verified pair"
+  fi
+
+  /bin/rm -f -- "${RUNTIME_CONFIG_PENDING}"
+  printf 'Portfolio runtime config transaction recovered to: %s\n' "${previous_image}"
+}
+
+if [[ "${recovery_mode}" == true ]]; then
+  recover_pending_transaction
+  exit 0
+fi
 
 new_image="${IMAGE_REPOSITORY}@${image_digest}"
 current_image="$(read_env_value PORTFOLIO_IMAGE)"
@@ -456,9 +636,8 @@ else
   if [[ "${config_mode}" == update ]]; then
     candidate_config_digest="${config_digest}"
     candidate_config_revision="${revision}"
-    candidate_release="$(
-      prepare_runtime_release "${config_digest}" "${revision}"
-    )"
+    prepare_runtime_release "${config_digest}" "${revision}"
+    candidate_release="${prepared_release}"
     candidate_config_compose_sha256="$(
       compose_sha256 "${candidate_release}/compose.yaml"
     )"
@@ -491,7 +670,7 @@ validate_compose_contract "${candidate_compose}" "${new_image}"
 if [[ "${legacy_mode}" == true ]]; then
   write_image_env "${new_image}"
 else
-  previous_config_digest="${current_config_digest:-}"
+  previous_config_digest="${current_config_digest:-${ZERO_DIGEST}}"
   if is_digest "${previous_config_digest}"; then
     previous_release="$(release_dir_for_digest "${previous_config_digest}")"
     previous_compose="${previous_release}/compose.yaml"

@@ -9,6 +9,10 @@ fi
 command_name="${1:-}"
 shift || true
 
+if [[ -n "${FAKE_DOCKER_LOG:-}" ]]; then
+  printf '%s %s\n' "${command_name}" "$*" >>"${FAKE_DOCKER_LOG}"
+fi
+
 case "${command_name}" in
   login|logout|pull|rm)
     exit 0
@@ -18,6 +22,9 @@ case "${command_name}" in
     ;;
   cp)
     destination="$2"
+    if [[ "${FAKE_FAIL_CP:-false}" == true ]]; then
+      exit 1
+    fi
     /bin/cp "${FAKE_RUNTIME_COMPOSE}" "${destination}/compose.yaml"
     ;;
   image)

@@ -41,6 +41,13 @@ drift 복구는 `workflow_dispatch`의 `sync_runtime_config`를 사용한다.
 health를 확인한다. 실패하면 직전 정상 application/config 쌍으로 돌아간다.
 기존 v1 명령은 v2 전환 기간에만 유지한다.
 
+v2 workflow를 `main`에 병합하기 전에 두 deploy script를 위 mapping의 Mac
+mini 경로에 사전 설치해야 한다. 기존 파일을 timestamp backup으로 보존하고,
+설치본 SHA-256과 repository 원본의 일치, mode `700`, `/bin/bash -n`, 잘못된
+forced command 거부를 확인한 뒤에만 merge한다. 완료하지 않으면 기존
+wrapper가 v2 명령을 거부한다. deploy script 자체는 runtime config artifact의
+자동 동기화 대상이 아니다.
+
 ## 검증
 
 저장소에서 다음 명령을 실행한다.
@@ -58,3 +65,19 @@ v2 스크립트를 설치한 뒤에는 Mac mini에서 `bash -n`과 wrapper 입�
 운영 script 설치에 문제가 있으면 설치 직전 만든 개별 backup으로 script를
 복원한다. v2 배포 실패 시 state에 기록된 직전 application image와 runtime
 config release를 함께 적용한다.
+
+배포 중단이나 host 재시작으로
+`/Users/homeserver/Server/apps/portfolio/runtime-config/pending`이 남으면
+pending 파일을 직접 수정·삭제하지 말고 다음 명령을 Mac mini에서 실행한다.
+
+```bash
+/Users/homeserver/Server/scripts/deploy/deploy-portfolio.sh recover
+```
+
+recovery는 pending과 마지막 검증 state, release allowlist·Compose hash,
+`.env`, `current` pointer를 대조한다. target pair 적용이 이미 끝났으면 marker만
+정리하고, 그렇지 않으면 이전 image/config pair를 `--pull never`로 재적용한다.
+runtime config 도입 전 설치는 legacy Compose로 복구한다. 첫 image도 없던
+bootstrap 중단은 app을 제거하고 image 환경을 빈 값으로 되돌린다. 불일치나
+변조가 있으면 marker를 유지한 채 실패한다. 복구 후 container health와
+`https://www.chochiho.cloud/health`를 확인한다.
