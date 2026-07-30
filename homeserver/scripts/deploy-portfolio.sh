@@ -671,12 +671,15 @@ else
   current_config_digest="$(read_state_value RUNTIME_CONFIG_DIGEST)"
   current_config_revision="$(read_state_value RUNTIME_CONFIG_REVISION)"
   current_config_compose_sha256="$(read_state_value RUNTIME_CONFIG_COMPOSE_SHA256)"
+  current_state_image="$(read_state_value APPLICATION_IMAGE)"
 
   if [[ -e "${RUNTIME_CONFIG_STATE}" ]]; then
     if [[ ! -f "${RUNTIME_CONFIG_STATE}" || -L "${RUNTIME_CONFIG_STATE}" ]] \
       || ! is_digest "${current_config_digest}" \
       || [[ ! "${current_config_revision}" =~ ^[0-9a-f]{40}$ ]] \
-      || [[ ! "${current_config_compose_sha256}" =~ ^[0-9a-f]{64}$ ]]
+      || [[ ! "${current_config_compose_sha256}" =~ ^[0-9a-f]{64}$ ]] \
+      || ! is_approved_image "${current_state_image}" \
+      || [[ "${current_state_image}" != "${current_image}" ]]
     then
       fail "current runtime config state is invalid"
     fi

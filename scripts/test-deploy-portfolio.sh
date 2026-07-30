@@ -226,6 +226,25 @@ if [[ "${recovery_exit_code}" -ne 65 || ! -f "${pending_file}" ]]; then
 fi
 /bin/rm -f -- "${pending_file}"
 
+printf 'PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_ONE}" \
+  >"${app_dir}/.env"
+set +e
+run_deploy \
+  "${APP_DIGEST_THREE}" \
+  "${REVISION_THREE}" \
+  update \
+  "${CONFIG_DIGEST_TWO}" \
+  test-user \
+  >/dev/null 2>&1
+drifted_state_exit_code="$?"
+set -e
+if [[ "${drifted_state_exit_code}" -ne 65 ]]; then
+  printf 'Update with application image state drift must fail\n' >&2
+  exit 1
+fi
+printf 'PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_TWO}" \
+  >"${app_dir}/.env"
+
 set +e
 FAKE_DISABLE_HEALTHCHECK=true \
   run_deploy \
