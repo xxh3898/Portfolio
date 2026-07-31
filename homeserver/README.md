@@ -25,6 +25,24 @@ homeserver/runtime-config.Dockerfile
 `/Users/homeserver/Server/apps/portfolio/.env`, registry token, SSH key와
 known_hosts 원문은 저장소나 runtime-config artifact에 넣지 않는다.
 
+## Backup 경로 규칙
+
+세 프로젝트는 `/Users/homeserver/Server/backups/<project>/` 아래에서 backup
+종류를 분리한다. Portfolio의 고정 경로는 다음과 같다.
+
+```text
+/Users/homeserver/Server/backups/portfolio/data/
+/Users/homeserver/Server/backups/portfolio/predeploy/<timestamp>/
+/Users/homeserver/Server/backups/portfolio/bootstrap/<timestamp>/
+```
+
+Portfolio는 정적 웹 서비스이므로 현재 DB·upload data backup이나 예약 backup
+기능이 없다. 따라서 `data/`는 공통 구조를 위한 예약 경로이며 자동 생성하거나
+retention 대상으로 삼지 않는다. 배포 직전 운영 파일 snapshot은 `predeploy/`,
+stable bootstrap 설치 직전 원본은 `bootstrap/`에만 보관한다. 서로 다른 범주의
+backup을 한 directory에 섞거나 다른 프로젝트의 retention 대상으로 사용하지
+않는다.
+
 ## 자동 동기화 계약
 
 마지막 성공 `Production` deployment 이후 다음 입력 중 하나가 변경되면
@@ -108,8 +126,9 @@ runtime-config digest를 포함한 `update`여야 한다. marker가 있는데 st
 /Users/homeserver/Server/scripts/deploy/deploy-portfolio-ci.sh
 ```
 
-기존 bootstrap을 timestamp backup으로 보존하고 repository 원본과 설치본의
-SHA-256 일치, mode `0700`, `/bin/bash -n`, 잘못된 forced command의 exit `64`,
+기존 bootstrap을 `backups/portfolio/bootstrap/<timestamp>/`에 보존하고
+repository 원본과 설치본의 SHA-256 일치, mode `0700`, `/bin/bash -n`,
+잘못된 forced command의 exit `64`,
 Docker/Compose/Python/lockf 실행 환경을 확인한다. 기존
 `/Users/homeserver/Server/scripts/deploy/deploy-portfolio.sh`는 첫 artifact 전환과
 legacy recovery용 fallback으로 보존한다. 이 사전 설치 단계에서는 Compose,
