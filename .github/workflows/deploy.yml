@@ -1,0 +1,251 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      sync_runtime_config:
+        description: Force runtime config publication and synchronization
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portfolio-production
+  cancel-in-progress: false
+
+env:
+  IMAGE_NAME: ghcr.io/xxh3898/portfolio
+  RUNTIME_CONFIG_IMAGE_NAME: ghcr.io/xxh3898/portfolio-runtime-config
+
+jobs:
+  validate:
+    name: Validate image
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/validate.yml
+    permissions:
+      contents: read
+
+  publish:
+    name: Publish ARM64 image
+    if: github.ref == 'refs/heads/main'
+    needs:
+      - validate
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      deployments: read
+      packages: write
+    outputs:
+      image_digest: ${{ steps.publish.outputs.digest }}
+      runtime_config_mode: ${{ steps.runtime-config-mode.outputs.mode }}
+      runtime_config_digest: ${{ steps.publish-runtime-config.outputs.digest }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve last successful production revision
+        id: deployed-base
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          deployments="$(
+            curl \
+              --fail \
+              --retry 3 \
+              --silent \
+              --show-error \
+              --header "Authorization: Bearer ${GH_TOKEN}" \
+              --header "X-GitHub-Api-Version: 2022-11-28" \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/deployments?environment=Production&per_page=30"
+          )"
+          deployed_sha=0000000000000000000000000000000000000000
+          while IFS=$'\t' read -r deployment_id deployment_sha; do
+            state="$(
+              curl \
+                --fail \
+                --retry 3 \
+                --silent \
+                --show-error \
+                --header "Authorization: Bearer ${GH_TOKEN}" \
+                --header "X-GitHub-Api-Version: 2022-11-28" \
+                "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/deployments/${deployment_id}/statuses?per_page=1" \
+                | jq -r '.[0].state // empty'
+            )"
+            if [[ "${state}" == success ]]; then
+              deployed_sha="${deployment_sha}"
+              break
+            fi
+          done < <(jq -r '.[] | [.id, .sha] | @tsv' <<<"${deployments}")
+          if [[ ! "${deployed_sha}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            printf 'Last successful deployment revision has an unexpected format\n' >&2
+            exit 64
+          fi
+          printf 'sha=%s\n' "${deployed_sha}" >>"${GITHUB_OUTPUT}"
+
+      - name: Detect runtime config changes
+        id: runtime-config-mode
+        env:
+          DEPLOYED_SHA: ${{ steps.deployed-base.outputs.sha }}
+          FORCE_SYNC: ${{ inputs.sync_runtime_config || false }}
+        run: |
+          mode="$(
+            ./scripts/detect-runtime-config-change.sh \
+              "${DEPLOYED_SHA}" \
+              "${GITHUB_SHA}" \
+              "${FORCE_SYNC}"
+          )"
+          printf 'mode=%s\n' "${mode}" >>"${GITHUB_OUTPUT}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Log in to GHCR
+        uses: docker/login-action@371161bbe7024a29a25c5e19bfcbc0804fe9ad2c # v4.5.2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish ARM64 image
+        id: publish
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ github.sha }}
+          cache-from: type=gha,scope=portfolio-arm64
+          cache-to: type=gha,mode=max,scope=portfolio-arm64
+
+      - name: Build and publish runtime config image
+        id: publish-runtime-config
+        if: steps.runtime-config-mode.outputs.mode == 'update'
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: homeserver/runtime-config.Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: ${{ env.RUNTIME_CONFIG_IMAGE_NAME }}:${{ github.sha }}
+          build-args: |
+            REVISION=${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ github.sha }}
+          cache-from: type=gha,scope=portfolio-runtime-config
+          cache-to: type=gha,mode=max,scope=portfolio-runtime-config
+
+      - name: Record published image
+        env:
+          IMAGE_DIGEST: ${{ steps.publish.outputs.digest }}
+        run: |
+          {
+            printf '## Published image\n\n'
+            printf -- "- Image: \`%s:%s\`\n" "${IMAGE_NAME}" "${GITHUB_SHA}"
+            printf -- "- Digest: \`%s\`\n" "${IMAGE_DIGEST}"
+            printf -- "- Runtime config mode: \`%s\`\n" \
+              "${{ steps.runtime-config-mode.outputs.mode }}"
+            if [[ "${{ steps.runtime-config-mode.outputs.mode }}" == update ]]; then
+              printf -- "- Runtime config digest: \`%s\`\n" \
+                "${{ steps.publish-runtime-config.outputs.digest }}"
+            else
+              printf -- "- Runtime config: current verified release retained\n"
+            fi
+          } >>"${GITHUB_STEP_SUMMARY}"
+
+  deploy:
+    name: Deploy to home-mini
+    if: github.ref == 'refs/heads/main'
+    needs:
+      - publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: Production
+      url: https://www.chochiho.cloud
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+
+    steps:
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@780049a30b6ff5c378a9e7b389d15ece7a204888 # v4.1.3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: portfolio-deploy-${{ github.run_id }}-${{ github.run_attempt }}
+          ping: home-mini
+
+      - name: Configure restricted SSH identity
+        env:
+          HOME_MINI_SSH_KEY: ${{ secrets.HOME_MINI_SSH_KEY }}
+          HOME_MINI_KNOWN_HOSTS: ${{ secrets.HOME_MINI_KNOWN_HOSTS }}
+        run: |
+          test -n "${HOME_MINI_SSH_KEY}"
+          test -n "${HOME_MINI_KNOWN_HOSTS}"
+
+          umask 077
+          mkdir -p "${HOME}/.ssh"
+          printf '%s\n' "${HOME_MINI_SSH_KEY}" >"${HOME}/.ssh/id_ed25519_home_mini_ci"
+          printf '%s\n' "${HOME_MINI_KNOWN_HOSTS}" >"${HOME}/.ssh/known_hosts"
+
+          ssh-keygen -y -f "${HOME}/.ssh/id_ed25519_home_mini_ci" >/dev/null
+          ssh-keygen -lf "${HOME}/.ssh/known_hosts" >/dev/null
+
+      - name: Deploy published image
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_DIGEST: ${{ needs.publish.outputs.image_digest }}
+          RUNTIME_CONFIG_MODE: ${{ needs.publish.outputs.runtime_config_mode }}
+          RUNTIME_CONFIG_DIGEST: ${{ needs.publish.outputs.runtime_config_digest }}
+        run: |
+          set -Eeuo pipefail
+
+          if [[ ! "${IMAGE_DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            printf 'Published image digest has an unexpected format\n' >&2
+            exit 64
+          fi
+
+          case "${RUNTIME_CONFIG_MODE}" in
+            keep)
+              deploy_command="deploy-portfolio-v2 ${IMAGE_DIGEST} ${GITHUB_SHA} keep ${GITHUB_ACTOR}"
+              ;;
+            update)
+              if [[ ! "${RUNTIME_CONFIG_DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+                printf 'Runtime config digest has an unexpected format\n' >&2
+                exit 64
+              fi
+              deploy_command="deploy-portfolio-v2 ${IMAGE_DIGEST} ${GITHUB_SHA} update ${RUNTIME_CONFIG_DIGEST} ${GITHUB_ACTOR}"
+              ;;
+            *)
+              printf 'Runtime config mode has an unexpected value\n' >&2
+              exit 64
+              ;;
+          esac
+
+          printf '%s' "${GHCR_TOKEN}" \
+            | ssh \
+                -F /dev/null \
+                -i "${HOME}/.ssh/id_ed25519_home_mini_ci" \
+                -o BatchMode=yes \
+                -o IdentitiesOnly=yes \
+                -o StrictHostKeyChecking=yes \
+                homeserver@home-mini \
+                "${deploy_command}"

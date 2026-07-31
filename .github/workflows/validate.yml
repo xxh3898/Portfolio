@@ -1,0 +1,238 @@
+name: Validate
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Static site and ARM64 image
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Verify static site references
+        run: ./scripts/verify-static-site.sh
+
+      - name: Verify home server deployment config
+        run: ./scripts/verify-home-server-config.sh
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Build ARM64 verification image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          platforms: linux/arm64
+          load: true
+          push: false
+          tags: portfolio:verify
+          cache-from: type=gha,scope=portfolio-arm64
+          cache-to: type=gha,mode=max,scope=portfolio-arm64
+
+      - name: Build runtime config verification image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: homeserver/runtime-config.Dockerfile
+          platforms: linux/arm64
+          load: true
+          push: false
+          tags: portfolio-runtime-config:verify
+          build-args: |
+            REVISION=1111111111111111111111111111111111111111
+
+      - name: Verify runtime config artifact
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          expected_revision=1111111111111111111111111111111111111111
+          actual_revision="$(
+            docker image inspect \
+              --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' \
+              portfolio-runtime-config:verify
+          )"
+          test "${actual_revision}" = "${expected_revision}"
+
+          container_id="$(docker create portfolio-runtime-config:verify)"
+          runtime_dir="$(mktemp -d)"
+
+          cleanup_runtime_config() {
+            docker rm "${container_id}" >/dev/null 2>&1 || true
+            rm -rf -- "${runtime_dir}"
+          }
+          trap cleanup_runtime_config EXIT INT TERM
+
+          docker cp "${container_id}:/runtime/." "${runtime_dir}"
+          test -f "${runtime_dir}/compose.yaml"
+          test -x "${runtime_dir}/scripts/deploy-portfolio.sh"
+          test ! -L "${runtime_dir}/scripts/deploy-portfolio.sh"
+          test "$(
+            python3 -c '
+          import os
+          import stat
+          import sys
+
+          print(oct(stat.S_IMODE(os.stat(sys.argv[1]).st_mode)))
+          ' "${runtime_dir}/scripts/deploy-portfolio.sh"
+          )" = 0o700
+          bash -n "${runtime_dir}/scripts/deploy-portfolio.sh"
+          test "$(
+            find "${runtime_dir}" -mindepth 1 -print \
+              | sed "s#^${runtime_dir}/##" \
+              | sort
+          )" = $'compose.yaml\nscripts\nscripts/deploy-portfolio.sh'
+
+          PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@sha256:1111111111111111111111111111111111111111111111111111111111111111 \
+            docker compose \
+              --project-directory "${runtime_dir}" \
+              --file "${runtime_dir}/compose.yaml" \
+              config \
+              --quiet
+
+      - name: Verify container runtime
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          container_name="portfolio-verify-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+          cleanup() {
+            docker stop "${container_name}" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT INT TERM
+
+          docker run \
+            --detach \
+            --rm \
+            --name "${container_name}" \
+            --publish 127.0.0.1:18080:8080 \
+            portfolio:verify \
+            >/dev/null
+
+          health_state=starting
+          for _ in {1..30}; do
+            health_state="$(
+              docker inspect \
+                --format '{{.State.Health.Status}}' \
+                "${container_name}"
+            )"
+
+            if [[ "${health_state}" == "healthy" ]]; then
+              break
+            fi
+
+            if [[ "${health_state}" == "unhealthy" ]]; then
+              docker logs "${container_name}"
+              exit 1
+            fi
+
+            sleep 1
+          done
+
+          if [[ "${health_state}" != "healthy" ]]; then
+            docker logs "${container_name}"
+            exit 1
+          fi
+
+          assert_status() {
+            local expected_status="$1"
+            local route="$2"
+            local actual_status
+
+            actual_status="$(
+              curl \
+                --silent \
+                --show-error \
+                --output /dev/null \
+                --write-out '%{http_code}' \
+                "http://127.0.0.1:18080${route}"
+            )"
+
+            if [[ "${actual_status}" != "${expected_status}" ]]; then
+              printf \
+                'Unexpected HTTP status for %s: expected=%s actual=%s\n' \
+                "${route}" \
+                "${expected_status}" \
+                "${actual_status}" \
+                >&2
+              exit 1
+            fi
+          }
+
+          for route in \
+            / \
+            /resume.html \
+            /coverletter.html \
+            /api-spec.html \
+            /resume.pdf \
+            /assets/images/calmdesk_admin.png
+          do
+            assert_status 200 "${route}"
+          done
+
+          for route in \
+            /report-before.html \
+            /report-after.html \
+            /50x.html \
+            /not-found
+          do
+            assert_status 404 "${route}"
+          done
+
+          runtime_uid="$(docker exec "${container_name}" id -u)"
+          if [[ "${runtime_uid}" == "0" ]]; then
+            printf 'Container must not run as root\n' >&2
+            exit 1
+          fi
+
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            http://127.0.0.1:18080/health \
+            | grep --quiet --line-regexp 'ok'
+
+          response_headers="$(
+            curl \
+              --fail \
+              --silent \
+              --show-error \
+              --head \
+              http://127.0.0.1:18080/
+          )"
+
+          grep \
+            --ignore-case \
+            --quiet \
+            '^X-Content-Type-Options: nosniff' \
+            <<<"${response_headers}"
+          grep \
+            --ignore-case \
+            --quiet \
+            '^X-Frame-Options: SAMEORIGIN' \
+            <<<"${response_headers}"
+          grep \
+            --ignore-case \
+            --quiet \
+            '^Referrer-Policy: strict-origin-when-cross-origin' \
+            <<<"${response_headers}"
+
+          printf 'Container runtime verification passed\n'
