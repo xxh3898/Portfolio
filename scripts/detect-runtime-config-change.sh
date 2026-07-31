@@ -37,7 +37,9 @@ if git diff --quiet \
   "${before_sha}" \
   "${after_sha}" \
   -- \
+  .dockerignore \
   homeserver/compose.yaml \
+  homeserver/scripts/deploy-portfolio.sh \
   homeserver/runtime-config.Dockerfile
 then
   printf 'keep\n'

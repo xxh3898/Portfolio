@@ -40,12 +40,13 @@ printf 'PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_ONE}" \
   -e "s#readonly APP_DIR=/Users/homeserver/Server/apps/portfolio#readonly APP_DIR=${app_dir}#" \
   "${SOURCE_SCRIPT}" \
   >"${test_script}"
-/bin/chmod 700 "${test_script}" "${MOCK_DOCKER}"
+/bin/chmod 700 "${test_script}"
 
 run_deploy() {
   printf 'test-token' \
     | /usr/bin/env \
         FAKE_RUNTIME_COMPOSE="${runtime_compose}" \
+        FAKE_RUNTIME_SCRIPT="${test_script}" \
         FAKE_CONFIG_REVISION="${REVISION_ONE}" \
         FAKE_APP_DIGEST_ONE="${APP_DIGEST_ONE}" \
         FAKE_APP_DIGEST_TWO="${APP_DIGEST_TWO}" \
@@ -57,24 +58,34 @@ run_deploy() {
         FAKE_FAIL_CP="${FAKE_FAIL_CP:-false}" \
         FAKE_FAIL_IF_AMBIENT_IMAGE="${FAKE_FAIL_IF_AMBIENT_IMAGE:-false}" \
         FAKE_FAIL_UP="${FAKE_FAIL_UP:-false}" \
+        FAKE_RENDER_CGROUP_MODE_JSON="${FAKE_RENDER_CGROUP_MODE_JSON:-}" \
+        FAKE_RENDER_DEPLOY_JSON="${FAKE_RENDER_DEPLOY_JSON:-}" \
+        FAKE_RENDER_DEVICE_CGROUP_RULES_JSON="${FAKE_RENDER_DEVICE_CGROUP_RULES_JSON:-}" \
         FAKE_RENDER_IMAGE="${FAKE_RENDER_IMAGE:-}" \
-        FAKE_RENDER_CONTAINER_NAME="${FAKE_RENDER_CONTAINER_NAME:-}" \
+        FAKE_RENDER_ENV_FILE_JSON="${FAKE_RENDER_ENV_FILE_JSON:-}" \
+        FAKE_RENDER_ENVIRONMENT_JSON="${FAKE_RENDER_ENVIRONMENT_JSON:-}" \
+        FAKE_RENDER_EDGE_ATTACHMENT_JSON="${FAKE_RENDER_EDGE_ATTACHMENT_JSON:-}" \
         FAKE_RENDER_HEALTHCHECK_JSON="${FAKE_RENDER_HEALTHCHECK_JSON:-}" \
+        FAKE_RENDER_GPUS_JSON="${FAKE_RENDER_GPUS_JSON:-}" \
+        FAKE_RENDER_INIT="${FAKE_RENDER_INIT:-}" \
+        FAKE_RENDER_LOGGING_JSON="${FAKE_RENDER_LOGGING_JSON:-}" \
+        FAKE_RENDER_PIDS_LIMIT="${FAKE_RENDER_PIDS_LIMIT:-}" \
+        FAKE_RENDER_PORTS_JSON="${FAKE_RENDER_PORTS_JSON:-}" \
         FAKE_RENDER_PROJECT_NAME="${FAKE_RENDER_PROJECT_NAME:-}" \
         FAKE_RENDER_PRIVILEGED_FROM_ENV="${FAKE_RENDER_PRIVILEGED_FROM_ENV:-false}" \
+        FAKE_RENDER_READ_ONLY="${FAKE_RENDER_READ_ONLY:-}" \
         FAKE_RENDER_POST_START_JSON="${FAKE_RENDER_POST_START_JSON:-}" \
         FAKE_RENDER_PID_MODE_JSON="${FAKE_RENDER_PID_MODE_JSON:-}" \
-        FAKE_RENDER_PIDS_LIMIT="${FAKE_RENDER_PIDS_LIMIT:-}" \
-        FAKE_RENDER_LOGGING_JSON="${FAKE_RENDER_LOGGING_JSON:-}" \
-        FAKE_RENDER_EDGE_ATTACHMENT_JSON="${FAKE_RENDER_EDGE_ATTACHMENT_JSON:-}" \
         FAKE_RENDER_RESTART_POLICY="${FAKE_RENDER_RESTART_POLICY:-}" \
         FAKE_RENDER_SCALE="${FAKE_RENDER_SCALE:-}" \
         FAKE_RENDER_SECURITY_OPT_JSON="${FAKE_RENDER_SECURITY_OPT_JSON:-}" \
         FAKE_RENDER_TMPFS_JSON="${FAKE_RENDER_TMPFS_JSON:-}" \
         FAKE_RENDER_USER_OVERRIDE="${FAKE_RENDER_USER_OVERRIDE:-}" \
         FAKE_RENDER_USE_API_SOCKET="${FAKE_RENDER_USE_API_SOCKET:-false}" \
+        FAKE_RENDER_VOLUMES_JSON="${FAKE_RENDER_VOLUMES_JSON:-}" \
         FAKE_RENDER_VOLUMES_FROM_JSON="${FAKE_RENDER_VOLUMES_FROM_JSON:-}" \
         FAKE_RENDER_WEB_PROFILE="${FAKE_RENDER_WEB_PROFILE:-false}" \
+        FAKE_REQUIRE_NO_ENV_RESOLUTION="${FAKE_REQUIRE_NO_ENV_RESOLUTION:-false}" \
         FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN="${FAKE_REQUIRE_NONEMPTY_ENV_ON_DOWN:-false}" \
         FAKE_SERVICE_HEALTH="${FAKE_SERVICE_HEALTH:-healthy}" \
         PORTFOLIO_IMAGE="${PORTFOLIO_IMAGE:-}" \
@@ -84,6 +95,7 @@ run_deploy() {
 run_recovery() {
   /usr/bin/env \
     FAKE_RUNTIME_COMPOSE="${runtime_compose}" \
+    FAKE_RUNTIME_SCRIPT="${test_script}" \
     FAKE_CONFIG_REVISION="${REVISION_ONE}" \
     FAKE_APP_DIGEST_ONE="${APP_DIGEST_ONE}" \
     FAKE_APP_DIGEST_TWO="${APP_DIGEST_TWO}" \
@@ -129,11 +141,79 @@ run_deploy \
   test-user
 
 state_file="${app_dir}/runtime-config/state"
+initialization_marker="${app_dir}/.runtime-config-v2-initialized"
 test -f "${state_file}"
 /usr/bin/grep -Fxq "RUNTIME_CONFIG_DIGEST=${CONFIG_DIGEST}" "${state_file}"
 /usr/bin/grep -Fxq "RUNTIME_CONFIG_REVISION=${REVISION_ONE}" "${state_file}"
+/usr/bin/grep -Eq '^RUNTIME_CONFIG_CONTENT_SHA256=[0-9a-f]{64}$' "${state_file}"
+if /usr/bin/grep -q '^RUNTIME_CONFIG_COMPOSE_SHA256=' "${state_file}"; then
+  printf 'New runtime config state must use the content hash schema\n' >&2
+  exit 1
+fi
 test -L "${app_dir}/runtime-config/current"
 test ! -e "${app_dir}/runtime-config/pending"
+test -f "${initialization_marker}"
+test ! -L "${initialization_marker}"
+/usr/bin/grep -Fxq 'RUNTIME_CONFIG_V2=initialized' "${initialization_marker}"
+test "$(
+  /usr/bin/python3 -c \
+    'import os, stat, sys; print(oct(stat.S_IMODE(os.stat(sys.argv[1]).st_mode)))' \
+    "${initialization_marker}"
+)" = 0o400
+
+first_release="${app_dir}/runtime-config/releases/${CONFIG_DIGEST#sha256:}"
+test -x "${first_release}/scripts/deploy-portfolio.sh"
+test ! -L "${first_release}/scripts/deploy-portfolio.sh"
+test "$(
+  /usr/bin/python3 -c \
+    'import os, stat, sys; print(oct(stat.S_IMODE(os.stat(sys.argv[1]).st_mode)))' \
+    "${first_release}/scripts/deploy-portfolio.sh"
+)" = 0o700
+
+/bin/rm -f -- "${initialization_marker}"
+run_deploy \
+  "${APP_DIGEST_ONE}" \
+  "${REVISION_ONE}" \
+  keep \
+  test-user
+test -f "${initialization_marker}"
+/usr/bin/grep -Fxq 'RUNTIME_CONFIG_V2=initialized' "${initialization_marker}"
+
+/bin/chmod 600 "${initialization_marker}"
+set +e
+run_deploy \
+  "${APP_DIGEST_TWO}" \
+  "${REVISION_TWO}" \
+  keep \
+  test-user \
+  >/dev/null 2>&1
+invalid_marker_mode_exit_code="$?"
+set -e
+if [[ "${invalid_marker_mode_exit_code}" -ne 65 ]]; then
+  printf 'Deployment with an insecure initialization marker mode must fail closed\n' >&2
+  exit 1
+fi
+/bin/chmod 400 "${initialization_marker}"
+
+/bin/chmod 600 "${initialization_marker}"
+printf 'RUNTIME_CONFIG_V2=invalid\n' >"${initialization_marker}"
+/bin/chmod 400 "${initialization_marker}"
+set +e
+run_deploy \
+  "${APP_DIGEST_TWO}" \
+  "${REVISION_TWO}" \
+  keep \
+  test-user \
+  >/dev/null 2>&1
+invalid_marker_exit_code="$?"
+set -e
+if [[ "${invalid_marker_exit_code}" -ne 65 ]]; then
+  printf 'Deployment with an invalid initialization marker must fail closed\n' >&2
+  exit 1
+fi
+/bin/chmod 600 "${initialization_marker}"
+printf 'RUNTIME_CONFIG_V2=initialized\n' >"${initialization_marker}"
+/bin/chmod 400 "${initialization_marker}"
 
 /bin/mv "${state_file}" "${state_file}.missing"
 set +e
@@ -331,8 +411,13 @@ if [[ "${unhealthy_recovery_exit_code}" -ne 65 || ! -f "${pending_file}" ]]; the
   exit 1
 fi
 
+/bin/rm -f -- \
+  "${initialization_marker}" \
+  "${app_dir}/runtime-config/current"
 run_recovery
 
+test -f "${initialization_marker}"
+/usr/bin/grep -Fxq 'RUNTIME_CONFIG_V2=initialized' "${initialization_marker}"
 test "$(/usr/bin/readlink "${app_dir}/runtime-config/current")" \
   = "releases/${CONFIG_DIGEST_TWO#sha256:}"
 test ! -e "${pending_file}"
@@ -397,23 +482,139 @@ fi
 /bin/rm -f -- "${state_file}"
 /bin/mv "${state_file}.valid" "${state_file}"
 
+FAKE_RENDER_RESTART_POLICY=always \
+FAKE_RENDER_LOGGING_JSON='{"driver":"local"}' \
+FAKE_RENDER_HEALTHCHECK_JSON='{"test":["CMD","wget","-q","-O","/dev/null","http://127.0.0.1:8080/health"],"interval":"45s","timeout":"7s","start_period":"8s","retries":4}' \
+FAKE_RENDER_ENVIRONMENT_JSON='{"CACHE_CONTROL":"public,max-age=300"}' \
+FAKE_RENDER_CGROUP_MODE_JSON='"private"' \
+  run_deploy \
+    "${APP_DIGEST_TWO}" \
+    "${REVISION_TWO}" \
+    keep \
+    test-user
+
 set +e
-FAKE_RENDER_RESTART_POLICY=no \
+FAKE_RENDER_READ_ONLY=false \
   run_deploy \
     "${APP_DIGEST_THREE}" \
     "${REVISION_THREE}" \
     keep \
     test-user \
     >/dev/null 2>&1
-wrong_restart_exit_code="$?"
+writable_root_exit_code="$?"
 set -e
-if [[ "${wrong_restart_exit_code}" -ne 1 ]]; then
-  printf 'Runtime config with a changed restart policy must fail\n' >&2
+if [[ "${writable_root_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a writable root filesystem must fail\n' >&2
   exit 1
 fi
 
 set +e
-FAKE_RENDER_USER_OVERRIDE=0 \
+FAKE_RENDER_INIT=false \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+disabled_init_exit_code="$?"
+set -e
+if [[ "${disabled_init_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config without init must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_PIDS_LIMIT=-1 \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+unbounded_pids_exit_code="$?"
+set -e
+if [[ "${unbounded_pids_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config without the Portfolio PID limit must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_CGROUP_MODE_JSON='"host"' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+host_cgroup_namespace_exit_code="$?"
+set -e
+if [[ "${host_cgroup_namespace_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with the host cgroup namespace must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_DEVICE_CGROUP_RULES_JSON='["a *:* rwm"]' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+device_cgroup_rules_exit_code="$?"
+set -e
+if [[ "${device_cgroup_rules_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with device cgroup rules must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_GPUS_JSON='[{"count":-1}]' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+gpu_request_exit_code="$?"
+set -e
+if [[ "${gpu_request_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a GPU request must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_DEPLOY_JSON='{"resources":{"reservations":{"devices":[{"capabilities":["gpu"],"count":-1}]}}}' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+deploy_device_reservation_exit_code="$?"
+set -e
+if [[ "${deploy_device_reservation_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a deploy device reservation must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_SECURITY_OPT_JSON='[]' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+missing_no_new_privileges_exit_code="$?"
+set -e
+if [[ "${missing_no_new_privileges_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config without no-new-privileges must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_USER_OVERRIDE=0:1000 \
   run_deploy \
     "${APP_DIGEST_THREE}" \
     "${REVISION_THREE}" \
@@ -428,17 +629,32 @@ if [[ "${root_user_exit_code}" -ne 1 ]]; then
 fi
 
 set +e
-FAKE_RENDER_SECURITY_OPT_JSON='["no-new-privileges:true","seccomp=unconfined"]' \
+FAKE_RENDER_USER_OVERRIDE=00:1000 \
   run_deploy \
     "${APP_DIGEST_THREE}" \
     "${REVISION_THREE}" \
     keep \
     test-user \
     >/dev/null 2>&1
-unsafe_security_opt_exit_code="$?"
+leading_zero_root_user_exit_code="$?"
 set -e
-if [[ "${unsafe_security_opt_exit_code}" -ne 1 ]]; then
-  printf 'Runtime config with an extra security option must fail\n' >&2
+if [[ "${leading_zero_root_user_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a leading-zero root UID must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_EDGE_ATTACHMENT_JSON='{"aliases":["database"]}' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+edge_alias_exit_code="$?"
+set -e
+if [[ "${edge_alias_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a shared edge alias must fail\n' >&2
   exit 1
 fi
 
@@ -473,6 +689,67 @@ if [[ "${volumes_from_exit_code}" -ne 1 ]]; then
 fi
 
 set +e
+FAKE_REQUIRE_NO_ENV_RESOLUTION=true \
+FAKE_RENDER_ENV_FILE_JSON='["/Users/homeserver/Server/apps/portfolio/.env"]' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+env_file_exit_code="$?"
+set -e
+if [[ "${env_file_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with env_file must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_VOLUMES_JSON='[{"type":"bind","source":"/","target":"/host"}]' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+host_bind_exit_code="$?"
+set -e
+if [[ "${host_bind_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a host bind must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_TMPFS_JSON='["/srv/site:size=64m,mode=1777"]' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+content_masking_tmpfs_exit_code="$?"
+set -e
+if [[ "${content_masking_tmpfs_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a content-masking tmpfs mount must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_PORTS_JSON='[{"target":8080,"published":"8080"}]' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+published_port_exit_code="$?"
+set -e
+if [[ "${published_port_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a published host port must fail\n' >&2
+  exit 1
+fi
+
+set +e
 FAKE_RENDER_USE_API_SOCKET=true \
   run_deploy \
     "${APP_DIGEST_THREE}" \
@@ -502,61 +779,6 @@ if [[ "${host_namespace_exit_code}" -ne 1 ]]; then
   exit 1
 fi
 
-set +e
-FAKE_RENDER_PIDS_LIMIT=-1 \
-  run_deploy "${APP_DIGEST_THREE}" "${REVISION_THREE}" keep test-user \
-  >/dev/null 2>&1
-unbounded_pids_exit_code="$?"
-set -e
-if [[ "${unbounded_pids_exit_code}" -ne 1 ]]; then
-  printf 'Runtime config with an unbounded PID limit must fail\n' >&2
-  exit 1
-fi
-
-set +e
-FAKE_RENDER_LOGGING_JSON='{"driver":"json-file"}' \
-  run_deploy "${APP_DIGEST_THREE}" "${REVISION_THREE}" keep test-user \
-  >/dev/null 2>&1
-unbounded_logging_exit_code="$?"
-set -e
-if [[ "${unbounded_logging_exit_code}" -ne 1 ]]; then
-  printf 'Runtime config without bounded log rotation must fail\n' >&2
-  exit 1
-fi
-
-set +e
-FAKE_RENDER_EDGE_ATTACHMENT_JSON='{"aliases":["database"]}' \
-  run_deploy "${APP_DIGEST_THREE}" "${REVISION_THREE}" keep test-user \
-  >/dev/null 2>&1
-edge_alias_exit_code="$?"
-set -e
-if [[ "${edge_alias_exit_code}" -ne 1 ]]; then
-  printf 'Runtime config with an edge network alias must fail\n' >&2
-  exit 1
-fi
-
-set +e
-FAKE_RENDER_CONTAINER_NAME=database \
-  run_deploy "${APP_DIGEST_THREE}" "${REVISION_THREE}" keep test-user \
-  >/dev/null 2>&1
-container_name_exit_code="$?"
-set -e
-if [[ "${container_name_exit_code}" -ne 1 ]]; then
-  printf 'Runtime config with a changed container name must fail\n' >&2
-  exit 1
-fi
-
-set +e
-FAKE_RENDER_HEALTHCHECK_JSON='{"test":["CMD","wget","-q","-O","/dev/null","http://127.0.0.1:8080/health"],"interval":"1ms","timeout":"5s","start_period":"5s","retries":3}' \
-  run_deploy "${APP_DIGEST_THREE}" "${REVISION_THREE}" keep test-user \
-  >/dev/null 2>&1
-healthcheck_schedule_exit_code="$?"
-set -e
-if [[ "${healthcheck_schedule_exit_code}" -ne 1 ]]; then
-  printf 'Runtime config with a changed healthcheck schedule must fail\n' >&2
-  exit 1
-fi
-
 printf 'PRIVILEGED=false\n' >>"${app_dir}/.env"
 set +e
 FAKE_RENDER_PRIVILEGED_FROM_ENV=true \
@@ -571,21 +793,6 @@ fi
 /usr/bin/sed '/^PRIVILEGED=false$/d' "${app_dir}/.env" \
   >"${app_dir}/.env.cleaned"
 /bin/mv "${app_dir}/.env.cleaned" "${app_dir}/.env"
-
-set +e
-FAKE_RENDER_TMPFS_JSON='["/srv/site"]' \
-  run_deploy \
-    "${APP_DIGEST_THREE}" \
-    "${REVISION_THREE}" \
-    keep \
-    test-user \
-    >/dev/null 2>&1
-wrong_tmpfs_exit_code="$?"
-set -e
-if [[ "${wrong_tmpfs_exit_code}" -ne 1 ]]; then
-  printf 'Runtime config with an image-content tmpfs override must fail\n' >&2
-  exit 1
-fi
 
 set +e
 FAKE_RENDER_SCALE=0 \
@@ -633,6 +840,36 @@ if [[ "${disabled_healthcheck_exit_code}" -ne 1 ]]; then
 fi
 
 set +e
+FAKE_RENDER_HEALTHCHECK_JSON='{"test":["CMD","true"],"interval":"30s","timeout":"5s","retries":3}' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+meaningless_healthcheck_exit_code="$?"
+set -e
+if [[ "${meaningless_healthcheck_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with a non-HTTP healthcheck must fail\n' >&2
+  exit 1
+fi
+
+set +e
+FAKE_RENDER_HEALTHCHECK_JSON='{"test":["CMD-SHELL","true # http://127.0.0.1:8080/health"],"interval":"30s","timeout":"5s","retries":3}' \
+  run_deploy \
+    "${APP_DIGEST_THREE}" \
+    "${REVISION_THREE}" \
+    keep \
+    test-user \
+    >/dev/null 2>&1
+always_success_healthcheck_exit_code="$?"
+set -e
+if [[ "${always_success_healthcheck_exit_code}" -ne 1 ]]; then
+  printf 'Runtime config with an always-success healthcheck must fail\n' >&2
+  exit 1
+fi
+
+set +e
 FAKE_RENDER_PROJECT_NAME=unexpected \
   run_deploy \
     "${APP_DIGEST_THREE}" \
@@ -665,6 +902,72 @@ fi
   "PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@${APP_DIGEST_TWO}" \
   "${app_dir}/.env"
 
+legacy_app_dir="${test_root}/legacy-app"
+legacy_test_script="${test_root}/legacy-deploy-portfolio.sh"
+legacy_release="${legacy_app_dir}/runtime-config/releases/${CONFIG_DIGEST#sha256:}"
+/bin/mkdir -p "${legacy_release}"
+/bin/cp "${runtime_compose}" "${legacy_release}/compose.yaml"
+printf 'PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_ONE}" \
+  >"${legacy_app_dir}/.env"
+legacy_compose_sha="$(
+  /usr/bin/shasum -a 256 "${legacy_release}/compose.yaml" \
+    | /usr/bin/awk '{print $1}'
+)"
+{
+  printf 'APPLICATION_IMAGE=ghcr.io/xxh3898/portfolio@%s\n' "${APP_DIGEST_ONE}"
+  printf 'APPLICATION_REVISION=%s\n' "${REVISION_ONE}"
+  printf 'RUNTIME_CONFIG_DIGEST=%s\n' "${CONFIG_DIGEST}"
+  printf 'RUNTIME_CONFIG_REVISION=%s\n' "${REVISION_ONE}"
+  printf 'RUNTIME_CONFIG_COMPOSE_SHA256=%s\n' "${legacy_compose_sha}"
+  printf 'PREVIOUS_APPLICATION_IMAGE=\n'
+  printf 'PREVIOUS_RUNTIME_CONFIG_DIGEST=%s\n' \
+    'sha256:0000000000000000000000000000000000000000000000000000000000000000'
+} >"${legacy_app_dir}/runtime-config/state"
+/bin/chmod 600 "${legacy_app_dir}/runtime-config/state"
+/bin/ln -s \
+  "releases/${CONFIG_DIGEST#sha256:}" \
+  "${legacy_app_dir}/runtime-config/current"
+/usr/bin/sed \
+  -e "s#readonly DOCKER_BIN=/usr/local/bin/docker#readonly DOCKER_BIN=${MOCK_DOCKER}#" \
+  -e "s#readonly APP_DIR=/Users/homeserver/Server/apps/portfolio#readonly APP_DIR=${legacy_app_dir}#" \
+  "${SOURCE_SCRIPT}" \
+  >"${legacy_test_script}"
+/bin/chmod 700 "${legacy_test_script}"
+
+printf 'test-token' \
+  | /usr/bin/env \
+      FAKE_RUNTIME_COMPOSE="${runtime_compose}" \
+      FAKE_RUNTIME_SCRIPT="${legacy_test_script}" \
+      FAKE_CONFIG_REVISION="${REVISION_TWO}" \
+      FAKE_APP_DIGEST_ONE="${APP_DIGEST_ONE}" \
+      FAKE_APP_DIGEST_TWO="${APP_DIGEST_TWO}" \
+      FAKE_APP_REVISION_ONE="${REVISION_ONE}" \
+      FAKE_APP_REVISION_TWO="${REVISION_TWO}" \
+      FAKE_APP_REVISION_THREE="${REVISION_THREE}" \
+      /bin/bash "${legacy_test_script}" \
+        "${APP_DIGEST_TWO}" \
+        "${REVISION_TWO}" \
+        update \
+        "${CONFIG_DIGEST_TWO}" \
+        test-user
+
+/usr/bin/grep -Eq \
+  '^RUNTIME_CONFIG_CONTENT_SHA256=[0-9a-f]{64}$' \
+  "${legacy_app_dir}/runtime-config/state"
+if /usr/bin/grep -q \
+  '^RUNTIME_CONFIG_COMPOSE_SHA256=' \
+  "${legacy_app_dir}/runtime-config/state"
+then
+  printf 'Legacy state migration must replace the Compose-only hash schema\n' >&2
+  exit 1
+fi
+/usr/bin/grep -Fxq \
+  "RUNTIME_CONFIG_DIGEST=${CONFIG_DIGEST_TWO}" \
+  "${legacy_app_dir}/runtime-config/state"
+test -f "${legacy_app_dir}/.runtime-config-v2-initialized"
+test -x \
+  "${legacy_app_dir}/runtime-config/releases/${CONFIG_DIGEST_TWO#sha256:}/scripts/deploy-portfolio.sh"
+
 docker_log="${test_root}/docker.log"
 set +e
 FAKE_FAIL_CP=true \
@@ -689,6 +992,26 @@ if /usr/bin/find "${app_dir}/runtime-config/releases" -maxdepth 1 -type d -name 
 fi
 
 release_dir="${release_one}"
+printf '\n# tampered worker\n' >>"${release_dir}/scripts/deploy-portfolio.sh"
+
+set +e
+run_deploy \
+  "${APP_DIGEST_THREE}" \
+  "${REVISION_THREE}" \
+  keep \
+  test-user \
+  >/dev/null 2>&1
+tampered_worker_exit_code="$?"
+set -e
+if [[ "${tampered_worker_exit_code}" -ne 65 ]]; then
+  printf 'Tampered runtime deploy worker must fail with exit 65: actual=%s\n' \
+    "${tampered_worker_exit_code}" \
+    >&2
+  exit 1
+fi
+/bin/cp "${test_script}" "${release_dir}/scripts/deploy-portfolio.sh"
+/bin/chmod 700 "${release_dir}/scripts/deploy-portfolio.sh"
+
 printf '\n# tampered\n' >>"${release_dir}/compose.yaml"
 
 set +e

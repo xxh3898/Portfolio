@@ -11,6 +11,10 @@ DEPLOY_SCRIPT="${PROJECT_ROOT}/homeserver/scripts/deploy-portfolio.sh"
 CI_WRAPPER="${PROJECT_ROOT}/homeserver/scripts/deploy-portfolio-ci.sh"
 DETECT_SCRIPT="${PROJECT_ROOT}/scripts/detect-runtime-config-change.sh"
 DEPLOY_TEST="${PROJECT_ROOT}/scripts/test-deploy-portfolio.sh"
+BOOTSTRAP_TEST="${PROJECT_ROOT}/scripts/test-runtime-script-bootstrap.sh"
+DETECT_TEST="${PROJECT_ROOT}/scripts/test-detect-runtime-config-change.sh"
+LOCK_MOCK="${PROJECT_ROOT}/scripts/fixtures/mock-portfolio-lockf.py"
+ACTION_PIN_TEST="${PROJECT_ROOT}/scripts/test-workflow-action-pins.sh"
 DEPLOY_WORKFLOW="${PROJECT_ROOT}/.github/workflows/deploy.yml"
 IMAGE_REPOSITORY=ghcr.io/xxh3898/portfolio
 DUMMY_DIGEST=sha256:1111111111111111111111111111111111111111111111111111111111111111
@@ -46,6 +50,10 @@ for required_file in \
   "${CI_WRAPPER}" \
   "${DETECT_SCRIPT}" \
   "${DEPLOY_TEST}" \
+  "${BOOTSTRAP_TEST}" \
+  "${DETECT_TEST}" \
+  "${LOCK_MOCK}" \
+  "${ACTION_PIN_TEST}" \
   "${DEPLOY_WORKFLOW}"
 do
   if [[ ! -f "${required_file}" ]]; then
@@ -57,7 +65,14 @@ done
   "${DEPLOY_SCRIPT}" \
   "${CI_WRAPPER}" \
   "${DETECT_SCRIPT}" \
-  "${DEPLOY_TEST}"
+  "${DEPLOY_TEST}" \
+  "${BOOTSTRAP_TEST}" \
+  "${DETECT_TEST}" \
+  "${ACTION_PIN_TEST}"
+
+"${PROJECT_ROOT}/scripts/fixtures/mock-portfolio-lockf.py" --help \
+  >/dev/null 2>&1 \
+  && fail "lockf fixture가 임의 인자를 허용합니다"
 
 assert_exit_64 \
   "배포 스크립트가 인자 누락을 거부해야 합니다" \
@@ -162,7 +177,10 @@ then
   fail "runtime config 판정이 마지막 성공 Production deployment를 기준으로 하지 않습니다"
 fi
 
+"${DETECT_TEST}"
+"${BOOTSTRAP_TEST}"
 "${DEPLOY_TEST}"
+"${ACTION_PIN_TEST}"
 
 printf '홈서버 설정 검증 통과\n'
 printf -- '- Compose image: %s@%s\n' "${IMAGE_REPOSITORY}" "${DUMMY_DIGEST}"

@@ -13,3 +13,5 @@
 !homeserver/
 !homeserver/compose.yaml
 !homeserver/runtime-config.Dockerfile
+!homeserver/scripts/
+!homeserver/scripts/deploy-portfolio.sh

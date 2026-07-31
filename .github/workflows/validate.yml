@@ -82,11 +82,23 @@ jobs:
 
           docker cp "${container_id}:/runtime/." "${runtime_dir}"
           test -f "${runtime_dir}/compose.yaml"
+          test -x "${runtime_dir}/scripts/deploy-portfolio.sh"
+          test ! -L "${runtime_dir}/scripts/deploy-portfolio.sh"
           test "$(
-            find "${runtime_dir}" -type f -print \
+            python3 -c '
+          import os
+          import stat
+          import sys
+
+          print(oct(stat.S_IMODE(os.stat(sys.argv[1]).st_mode)))
+          ' "${runtime_dir}/scripts/deploy-portfolio.sh"
+          )" = 0o700
+          bash -n "${runtime_dir}/scripts/deploy-portfolio.sh"
+          test "$(
+            find "${runtime_dir}" -mindepth 1 -print \
               | sed "s#^${runtime_dir}/##" \
               | sort
-          )" = compose.yaml
+          )" = $'compose.yaml\nscripts\nscripts/deploy-portfolio.sh'
 
           PORTFOLIO_IMAGE=ghcr.io/xxh3898/portfolio@sha256:1111111111111111111111111111111111111111111111111111111111111111 \
             docker compose \

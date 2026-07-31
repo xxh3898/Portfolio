@@ -12,6 +12,7 @@ readonly RUNTIME_CONFIG_RELEASES="${RUNTIME_CONFIG_ROOT}/releases"
 readonly RUNTIME_CONFIG_STATE="${RUNTIME_CONFIG_ROOT}/state"
 readonly RUNTIME_CONFIG_PENDING="${RUNTIME_CONFIG_ROOT}/pending"
 readonly RUNTIME_CONFIG_CURRENT="${RUNTIME_CONFIG_ROOT}/current"
+readonly RUNTIME_CONFIG_INITIALIZED="${APP_DIR}/.runtime-config-v2-initialized"
 readonly IMAGE_REPOSITORY=ghcr.io/xxh3898/portfolio
 readonly RUNTIME_CONFIG_REPOSITORY=ghcr.io/xxh3898/portfolio-runtime-config
 readonly ZERO_SHA=0000000000000000000000000000000000000000
@@ -41,6 +42,21 @@ require_legacy_compose() {
   fi
 }
 
+validate_initialization_marker() {
+  if [[ ! -f "${RUNTIME_CONFIG_INITIALIZED}" ]] \
+    || [[ -L "${RUNTIME_CONFIG_INITIALIZED}" ]] \
+    || [[ "$(/bin/cat "${RUNTIME_CONFIG_INITIALIZED}")" != RUNTIME_CONFIG_V2=initialized ]]
+  then
+    fail "runtime config initialization marker is invalid"
+  fi
+  if ! "${PYTHON_BIN}" -c \
+    'import os, stat, sys; raise SystemExit(0 if stat.S_IMODE(os.stat(sys.argv[1]).st_mode) == 0o400 else 1)' \
+    "${RUNTIME_CONFIG_INITIALIZED}"
+  then
+    fail "runtime config initialization marker mode must be 400"
+  fi
+}
+
 is_digest() {
   [[ "$1" =~ ^sha256:[0-9a-f]{64}$ ]] && [[ "$1" != "${ZERO_DIGEST}" ]]
 }
@@ -52,6 +68,7 @@ revision=
 config_digest=
 image_digest=
 registry_user=
+marker_migration_required=false
 
 case "$#" in
   1)
@@ -129,6 +146,29 @@ if [[ "${recovery_mode}" == false ]] \
 then
   fail "an incomplete runtime config transaction requires recovery" 75
 fi
+if [[ -e "${RUNTIME_CONFIG_INITIALIZED}" || -L "${RUNTIME_CONFIG_INITIALIZED}" ]]; then
+  validate_initialization_marker
+  if [[ ! -f "${RUNTIME_CONFIG_STATE}" || -L "${RUNTIME_CONFIG_STATE}" ]] \
+    || [[ ! -L "${RUNTIME_CONFIG_CURRENT}" ]]
+  then
+    fail "initialized runtime config requires verified state and current pointer"
+  fi
+elif [[ -e "${RUNTIME_CONFIG_STATE}" || -L "${RUNTIME_CONFIG_STATE}" ]] \
+  || [[ -e "${RUNTIME_CONFIG_CURRENT}" || -L "${RUNTIME_CONFIG_CURRENT}" ]]
+then
+  if [[ "${recovery_mode}" == true ]]; then
+    if [[ ! -e "${RUNTIME_CONFIG_STATE}" && ! -L "${RUNTIME_CONFIG_STATE}" ]]; then
+      fail "runtime config current pointer exists without verified state"
+    fi
+  else
+    if [[ ! -f "${RUNTIME_CONFIG_STATE}" || -L "${RUNTIME_CONFIG_STATE}" ]] \
+      || [[ ! -L "${RUNTIME_CONFIG_CURRENT}" ]]
+    then
+      fail "runtime config state is incomplete without initialization marker"
+    fi
+    marker_migration_required=true
+  fi
+fi
 if [[ "${legacy_mode}" == true ]] \
   && {
     [[ -e "${RUNTIME_CONFIG_STATE}" || -L "${RUNTIME_CONFIG_STATE}" ]] \
@@ -159,6 +199,7 @@ state_temp=
 pending_temp=
 release_temp=
 current_link_temp=
+initialization_temp=
 config_container_id=
 prepared_release=
 logged_in=false
@@ -175,7 +216,8 @@ cleanup() {
     "${env_temp}" \
     "${state_temp}" \
     "${pending_temp}" \
-    "${current_link_temp}"
+    "${current_link_temp}" \
+    "${initialization_temp}"
   do
     if [[ -n "${cleanup_path}" && -e "${cleanup_path}" ]]; then
       /bin/rm -f -- "${cleanup_path}"
@@ -266,10 +308,14 @@ release_dir_for_digest() {
   printf '%s/%s\n' "${RUNTIME_CONFIG_RELEASES}" "${digest#sha256:}"
 }
 
-validate_release_files() {
+release_shape() {
   local release_dir="$1"
+  local entries
   local unexpected
-  local files
+
+  if [[ ! -d "${release_dir}" || -L "${release_dir}" ]]; then
+    fail "runtime config release is missing or unsafe"
+  fi
 
   unexpected="$(
     /usr/bin/find "${release_dir}" ! -type d ! -type f -print
@@ -278,18 +324,81 @@ validate_release_files() {
     fail "runtime config contains unsupported file types"
   fi
 
-  files="$(
-    /usr/bin/find "${release_dir}" -type f -print \
+  entries="$(
+    /usr/bin/find "${release_dir}" -mindepth 1 -print \
       | /usr/bin/sed "s#^${release_dir}/##" \
       | LC_ALL=C /usr/bin/sort
   )"
-  if [[ "${files}" != compose.yaml ]]; then
-    fail "runtime config file allowlist does not match"
+  if [[ "${entries}" == compose.yaml ]]; then
+    printf 'legacy'
+    return 0
+  fi
+  if [[ "${entries}" == $'compose.yaml\nscripts\nscripts/deploy-portfolio.sh' ]]; then
+    printf 'synced'
+    return 0
+  fi
+  fail "runtime config entry allowlist does not match"
+}
+
+validate_synced_script() {
+  local release_dir="$1"
+  local script="${release_dir}/scripts/deploy-portfolio.sh"
+
+  if [[ ! -f "${script}" || -L "${script}" || ! -x "${script}" ]]; then
+    fail "runtime config deploy script is missing, unsafe, or not executable"
+  fi
+  if ! "${PYTHON_BIN}" -c \
+    'import os, stat, sys; raise SystemExit(0 if stat.S_IMODE(os.stat(sys.argv[1]).st_mode) == 0o700 else 1)' \
+    "${script}"
+  then
+    fail "runtime config deploy script mode must be 700"
+  fi
+  if ! /bin/bash -n "${script}"; then
+    fail "runtime config deploy script syntax is invalid"
   fi
 }
 
-compose_sha256() {
-  /usr/bin/shasum -a 256 "$1" | /usr/bin/awk '{print $1}'
+validate_release() {
+  local release_dir="$1"
+  local expected_shape="${2:-either}"
+  local shape
+
+  shape="$(release_shape "${release_dir}")"
+  if [[ "${expected_shape}" != either && "${shape}" != "${expected_shape}" ]]; then
+    fail "runtime config release shape is not ${expected_shape}"
+  fi
+  if [[ "${shape}" == synced ]]; then
+    validate_synced_script "${release_dir}"
+  fi
+  printf '%s' "${shape}"
+}
+
+runtime_config_content_sha256() {
+  local compose_hash
+  local release_dir="$1"
+  local script_hash
+  local shape
+
+  shape="$(validate_release "${release_dir}")"
+  if [[ "${shape}" == legacy ]]; then
+    /usr/bin/shasum -a 256 "${release_dir}/compose.yaml" \
+      | /usr/bin/awk '{print $1}'
+    return 0
+  fi
+
+  compose_hash="$(
+    /usr/bin/shasum -a 256 "${release_dir}/compose.yaml" \
+      | /usr/bin/awk '{print $1}'
+  )"
+  script_hash="$(
+    /usr/bin/shasum -a 256 "${release_dir}/scripts/deploy-portfolio.sh" \
+      | /usr/bin/awk '{print $1}'
+  )"
+  printf '%s  compose.yaml\n%s  scripts/deploy-portfolio.sh\n' \
+    "${compose_hash}" \
+    "${script_hash}" \
+    | /usr/bin/shasum -a 256 \
+    | /usr/bin/awk '{print $1}'
 }
 
 validate_compose_contract() {
@@ -305,6 +414,7 @@ validate_compose_contract() {
       --env-file "${validation_env}" \
       --file "${compose_file}" \
       config \
+      --no-env-resolution \
       --quiet
 
   rendered="$(
@@ -315,6 +425,7 @@ validate_compose_contract() {
         --env-file "${validation_env}" \
         --file "${compose_file}" \
         config \
+        --no-env-resolution \
         --format json
   )"
 
@@ -332,59 +443,59 @@ if config.get("name") != "portfolio":
 if set(services) != {"portfolio"}:
     raise SystemExit("unexpected Portfolio service set")
 service = services["portfolio"]
-allowed_service_keys = {
-    "command",
-    "container_name",
-    "entrypoint",
-    "healthcheck",
-    "image",
-    "init",
-    "logging",
-    "networks",
-    "pids_limit",
-    "read_only",
-    "restart",
-    "security_opt",
-    "profiles",
-    "scale",
-    "tmpfs",
-    "user",
-}
-unsupported_service_keys = {
-    name
-    for name, value in service.items()
-    if name not in allowed_service_keys and value not in (None, False, "", [], {})
-}
-if unsupported_service_keys:
-    raise SystemExit("Portfolio contains an unsupported Compose service field")
 if service.get("image") != expected_image:
     raise SystemExit("Portfolio image does not match the requested deployment")
-if service.get("container_name") != "portfolio":
-    raise SystemExit("Portfolio container name must remain portfolio")
+if service.get("read_only") is not True:
+    raise SystemExit("Portfolio must retain a read-only root filesystem")
+if service.get("init") is not True:
+    raise SystemExit("Portfolio must retain init")
+if service.get("pids_limit") != 100:
+    raise SystemExit("Portfolio must retain pids_limit 100")
+if service.get("security_opt") != ["no-new-privileges:true"]:
+    raise SystemExit("Portfolio must retain no-new-privileges")
 if set(service.get("networks", {})) != {"edge"}:
     raise SystemExit("Portfolio must only join edge")
-if service.get("networks", {}).get("edge") is not None:
+if service.get("networks", {}).get("edge") not in (None, {}):
     raise SystemExit("Portfolio edge attachment must not define aliases or options")
-if service.get("ports"):
+if service.get("ports") or service.get("network_mode") is not None:
     raise SystemExit("Portfolio must not publish host ports")
 if service.get("profiles"):
     raise SystemExit("Portfolio must not use Compose profiles")
-if service.get("restart") != "unless-stopped":
-    raise SystemExit("Portfolio restart policy must remain unless-stopped")
+scale = service.get("scale")
+if scale is not None and scale < 1:
+    raise SystemExit("Portfolio scale must keep at least one replica")
+replicas = (service.get("deploy") or {}).get("replicas")
+if replicas is not None and replicas < 1:
+    raise SystemExit("Portfolio deploy replicas must keep at least one replica")
+device_reservations = (
+    ((service.get("deploy") or {}).get("resources") or {})
+    .get("reservations") or {}
+).get("devices")
+user_component = str(service.get("user", "")).strip().lower().split(":", 1)[0]
+try:
+    numeric_user = int(user_component, 10)
+except ValueError:
+    numeric_user = None
 if (
-    service.get("user") not in (None, "")
+    user_component == "root"
+    or numeric_user == 0
     or service.get("privileged") is True
     or service.get("cap_add")
     or service.get("devices")
+    or service.get("device_cgroup_rules")
+    or service.get("gpus")
+    or device_reservations
     or service.get("use_api_socket") is True
     or service.get("pid") is not None
     or service.get("ipc") is not None
     or service.get("uts") is not None
     or service.get("userns_mode") is not None
+    or service.get("cgroup") == "host"
 ):
-    raise SystemExit("Portfolio must not override image user or add privileges")
+    raise SystemExit("Portfolio must not run as root or add host privileges")
 if (
-    service.get("volumes")
+    service.get("env_file")
+    or service.get("volumes")
     or service.get("volumes_from")
     or service.get("configs")
     or service.get("secrets")
@@ -394,39 +505,37 @@ if service.get("command") is not None or service.get("entrypoint") is not None:
     raise SystemExit("Portfolio must not override the image process")
 if service.get("post_start") is not None or service.get("pre_stop") is not None:
     raise SystemExit("Portfolio must not define lifecycle hooks")
-if service.get("tmpfs") != ["/tmp:size=64m,mode=1777"]:
+tmpfs = service.get("tmpfs", [])
+if tmpfs is None:
+    tmpfs = []
+if not isinstance(tmpfs, list):
     raise SystemExit("Portfolio tmpfs contract is invalid")
-if service.get("scale", 1) != 1:
-    raise SystemExit("Portfolio must run exactly one replica")
-if service.get("deploy", {}).get("replicas", 1) != 1:
-    raise SystemExit("Portfolio deploy replicas must remain one")
-if service.get("read_only") is not True or service.get("init") is not True:
-    raise SystemExit("Portfolio hardening flags are missing")
-if service.get("pids_limit") != 100:
-    raise SystemExit("Portfolio PID limit must remain 100")
-if service.get("security_opt") != ["no-new-privileges:true"]:
-    raise SystemExit("Portfolio security options must remain restricted")
-if service.get("logging") != {
-    "driver": "json-file",
-    "options": {"max-file": "3", "max-size": "10m"},
-}:
-    raise SystemExit("Portfolio logging rotation contract is invalid")
+for mount in tmpfs:
+    if isinstance(mount, str):
+        target = mount.split(":", 1)[0]
+    elif isinstance(mount, dict):
+        target = mount.get("target")
+    else:
+        raise SystemExit("Portfolio tmpfs contract is invalid")
+    if target != "/tmp":
+        raise SystemExit("Portfolio tmpfs may only mount /tmp")
 healthcheck = service.get("healthcheck", {})
-if healthcheck != {
-    "test": [
-        "CMD",
-        "wget",
-        "-q",
-        "-O",
-        "/dev/null",
-        "http://127.0.0.1:8080/health",
-    ],
-    "interval": "30s",
-    "timeout": "5s",
-    "start_period": "5s",
-    "retries": 3,
-}:
-    raise SystemExit("Portfolio healthcheck contract is invalid")
+health_test = healthcheck.get("test")
+expected_health_test = [
+    "CMD",
+    "wget",
+    "-q",
+    "-O",
+    "/dev/null",
+    "http://127.0.0.1:8080/health",
+]
+if (
+    not isinstance(health_test, list)
+    or not health_test
+    or healthcheck.get("disable") is True
+    or health_test != expected_health_test
+):
+    raise SystemExit("Portfolio must retain the exact loopback HTTP healthcheck command")
 edge = networks.get("edge", {})
 if edge.get("external") is not True or edge.get("name") != "edge":
     raise SystemExit("Portfolio edge network contract is invalid")
@@ -478,11 +587,14 @@ prepare_runtime_release() {
   "${DOCKER_BIN}" rm "${config_container_id}" >/dev/null
   config_container_id=
 
-  validate_release_files "${release_temp}"
-  /bin/chmod -R go-rwx "${release_temp}"
+  validate_release "${release_temp}" synced >/dev/null
+  /bin/chmod 700 "${release_temp}" "${release_temp}/scripts"
+  /bin/chmod 600 "${release_temp}/compose.yaml"
+  /bin/chmod 700 "${release_temp}/scripts/deploy-portfolio.sh"
+  validate_release "${release_temp}" synced >/dev/null
 
   if [[ -d "${release_dir}" ]]; then
-    validate_release_files "${release_dir}"
+    validate_release "${release_dir}" synced >/dev/null
     if ! /usr/bin/diff -qr "${release_temp}" "${release_dir}" >/dev/null; then
       fail "existing runtime config release differs from exact digest artifact"
     fi
@@ -530,6 +642,21 @@ replace_current_link() {
   current_link_temp=
 }
 
+write_initialization_marker() {
+  if [[ -e "${RUNTIME_CONFIG_INITIALIZED}" || -L "${RUNTIME_CONFIG_INITIALIZED}" ]]; then
+    validate_initialization_marker
+    return 0
+  fi
+
+  initialization_temp="$(
+    /usr/bin/mktemp "${APP_DIR}/.runtime-config-v2-initialized.tmp.XXXXXX"
+  )"
+  printf 'RUNTIME_CONFIG_V2=initialized\n' >"${initialization_temp}"
+  /bin/chmod 400 "${initialization_temp}"
+  /bin/mv -f -- "${initialization_temp}" "${RUNTIME_CONFIG_INITIALIZED}"
+  initialization_temp=
+}
+
 write_success_state() {
   local application_image="$1"
   local application_revision="$2"
@@ -538,7 +665,7 @@ write_success_state() {
   local previous_image="$5"
   local previous_config_digest="$6"
   local release_dir="$7"
-  local compose_digest="$8"
+  local content_digest="$8"
 
   state_temp="$(
     /usr/bin/mktemp "${RUNTIME_CONFIG_ROOT}/.state.tmp.XXXXXX"
@@ -548,7 +675,7 @@ write_success_state() {
     printf 'APPLICATION_REVISION=%s\n' "${application_revision}"
     printf 'RUNTIME_CONFIG_DIGEST=%s\n' "${runtime_config_digest}"
     printf 'RUNTIME_CONFIG_REVISION=%s\n' "${runtime_config_revision}"
-    printf 'RUNTIME_CONFIG_COMPOSE_SHA256=%s\n' "${compose_digest}"
+    printf 'RUNTIME_CONFIG_CONTENT_SHA256=%s\n' "${content_digest}"
     printf 'PREVIOUS_APPLICATION_IMAGE=%s\n' "${previous_image}"
     printf 'PREVIOUS_RUNTIME_CONFIG_DIGEST=%s\n' "${previous_config_digest}"
   } >"${state_temp}"
@@ -557,6 +684,7 @@ write_success_state() {
   state_temp=
 
   replace_current_link "${release_dir}"
+  write_initialization_marker
   /bin/rm -f -- "${RUNTIME_CONFIG_PENDING}"
 }
 
@@ -598,15 +726,36 @@ validate_pending_state() {
   fi
 }
 
+state_hash_key() {
+  if [[ -f "${RUNTIME_CONFIG_STATE}" && ! -L "${RUNTIME_CONFIG_STATE}" ]] \
+    && /usr/bin/grep -q '^RUNTIME_CONFIG_CONTENT_SHA256=' "${RUNTIME_CONFIG_STATE}"
+  then
+    printf 'RUNTIME_CONFIG_CONTENT_SHA256'
+  else
+    printf 'RUNTIME_CONFIG_COMPOSE_SHA256'
+  fi
+}
+
+state_expected_release_shape() {
+  if [[ "$(state_hash_key)" == RUNTIME_CONFIG_CONTENT_SHA256 ]]; then
+    printf 'synced'
+  else
+    printf 'legacy'
+  fi
+}
+
 validate_state_file() {
   local application_image
   local application_revision
+  local expected_legacy_keys
+  local expected_synced_keys
+  local hash_key
   local keys
   local previous_image
   local previous_digest
   local runtime_digest
   local runtime_revision
-  local runtime_compose_sha
+  local runtime_hash
 
   if [[ ! -f "${RUNTIME_CONFIG_STATE}" || -L "${RUNTIME_CONFIG_STATE}" ]]; then
     fail "runtime config state must be a regular non-symlink file"
@@ -615,17 +764,22 @@ validate_state_file() {
     /usr/bin/awk -F= 'NF >= 2 { print $1 }' "${RUNTIME_CONFIG_STATE}" \
       | LC_ALL=C /usr/bin/sort
   )"
-  if [[ "${keys}" != $'APPLICATION_IMAGE\nAPPLICATION_REVISION\nPREVIOUS_APPLICATION_IMAGE\nPREVIOUS_RUNTIME_CONFIG_DIGEST\nRUNTIME_CONFIG_COMPOSE_SHA256\nRUNTIME_CONFIG_DIGEST\nRUNTIME_CONFIG_REVISION' ]]; then
+  expected_legacy_keys=$'APPLICATION_IMAGE\nAPPLICATION_REVISION\nPREVIOUS_APPLICATION_IMAGE\nPREVIOUS_RUNTIME_CONFIG_DIGEST\nRUNTIME_CONFIG_COMPOSE_SHA256\nRUNTIME_CONFIG_DIGEST\nRUNTIME_CONFIG_REVISION'
+  expected_synced_keys=$'APPLICATION_IMAGE\nAPPLICATION_REVISION\nPREVIOUS_APPLICATION_IMAGE\nPREVIOUS_RUNTIME_CONFIG_DIGEST\nRUNTIME_CONFIG_CONTENT_SHA256\nRUNTIME_CONFIG_DIGEST\nRUNTIME_CONFIG_REVISION'
+  if [[ "${keys}" != "${expected_legacy_keys}" ]] \
+    && [[ "${keys}" != "${expected_synced_keys}" ]]
+  then
     fail "runtime config state keys are invalid"
   fi
 
+  hash_key="$(state_hash_key)"
   application_image="$(read_state_value APPLICATION_IMAGE)"
   application_revision="$(read_state_value APPLICATION_REVISION)"
   previous_image="$(read_state_value PREVIOUS_APPLICATION_IMAGE)"
   previous_digest="$(read_state_value PREVIOUS_RUNTIME_CONFIG_DIGEST)"
   runtime_digest="$(read_state_value RUNTIME_CONFIG_DIGEST)"
   runtime_revision="$(read_state_value RUNTIME_CONFIG_REVISION)"
-  runtime_compose_sha="$(read_state_value RUNTIME_CONFIG_COMPOSE_SHA256)"
+  runtime_hash="$(read_state_value "${hash_key}")"
   if ! is_approved_image "${application_image}" \
     || [[ ! "${application_revision}" =~ ^[0-9a-f]{40}$ ]] \
     || [[ "${application_revision}" == "${ZERO_SHA}" ]] \
@@ -634,7 +788,7 @@ validate_state_file() {
     || ! is_digest "${runtime_digest}" \
     || [[ ! "${runtime_revision}" =~ ^[0-9a-f]{40}$ ]] \
     || [[ "${runtime_revision}" == "${ZERO_SHA}" ]] \
-    || [[ ! "${runtime_compose_sha}" =~ ^[0-9a-f]{64}$ ]]
+    || [[ ! "${runtime_hash}" =~ ^[0-9a-f]{64}$ ]]
   then
     fail "runtime config state values are invalid"
   fi
@@ -642,10 +796,11 @@ validate_state_file() {
 
 validate_verified_release() {
   local digest="$1"
-  local expected_compose_sha="$2"
+  local expected_content_sha="$2"
+  local expected_shape="${3:-either}"
   local release_dir
 
-  if ! is_digest "${digest}" || [[ ! "${expected_compose_sha}" =~ ^[0-9a-f]{64}$ ]]; then
+  if ! is_digest "${digest}" || [[ ! "${expected_content_sha}" =~ ^[0-9a-f]{64}$ ]]; then
     fail "runtime config state is invalid"
   fi
 
@@ -653,12 +808,43 @@ validate_verified_release() {
   if [[ ! -d "${release_dir}" ]]; then
     fail "runtime config release is missing during recovery"
   fi
-  validate_release_files "${release_dir}"
-  if [[ "$(compose_sha256 "${release_dir}/compose.yaml")" != "${expected_compose_sha}" ]]; then
+  validate_release "${release_dir}" "${expected_shape}" >/dev/null
+  if [[ "$(runtime_config_content_sha256 "${release_dir}")" != "${expected_content_sha}" ]]; then
     fail "runtime config release integrity check failed during recovery"
   fi
 
   printf '%s' "${release_dir}"
+}
+
+migrate_initialization_marker() {
+  local state_image
+  local state_digest
+  local state_content_sha
+  local state_shape
+  local verified_release
+  local expected_current
+
+  validate_state_file
+  state_image="$(read_state_value APPLICATION_IMAGE)"
+  state_digest="$(read_state_value RUNTIME_CONFIG_DIGEST)"
+  state_content_sha="$(read_state_value "$(state_hash_key)")"
+  state_shape="$(state_expected_release_shape)"
+  if [[ "$(read_env_value PORTFOLIO_IMAGE)" != "${state_image}" ]]; then
+    fail "application image environment does not match verified runtime config state"
+  fi
+
+  verified_release="$(
+    validate_verified_release "${state_digest}" "${state_content_sha}" "${state_shape}"
+  )"
+  expected_current="releases/$("/usr/bin/basename" "${verified_release}")"
+  if [[ "$(/usr/bin/readlink "${RUNTIME_CONFIG_CURRENT}")" != "${expected_current}" ]]; then
+    fail "runtime config current pointer does not match verified state"
+  fi
+  validate_compose_contract \
+    "${verified_release}/compose.yaml" \
+    "${state_image}" \
+    "${ENV_FILE}"
+  write_initialization_marker
 }
 
 recover_pending_transaction() {
@@ -668,7 +854,8 @@ recover_pending_transaction() {
   local target_digest
   local state_image
   local state_digest
-  local state_compose_sha
+  local state_content_sha
+  local state_shape
   local state_previous_image
   local state_previous_digest
   local recovery_release
@@ -677,8 +864,20 @@ recover_pending_transaction() {
   local running_services
 
   validate_pending_state
+  state_image=
+  state_digest=
+  state_content_sha=
+  state_shape=
+  state_previous_image=
+  state_previous_digest=
   if [[ -e "${RUNTIME_CONFIG_STATE}" || -L "${RUNTIME_CONFIG_STATE}" ]]; then
     validate_state_file
+    state_image="$(read_state_value APPLICATION_IMAGE)"
+    state_digest="$(read_state_value RUNTIME_CONFIG_DIGEST)"
+    state_content_sha="$(read_state_value "$(state_hash_key)")"
+    state_shape="$(state_expected_release_shape)"
+    state_previous_image="$(read_state_value PREVIOUS_APPLICATION_IMAGE)"
+    state_previous_digest="$(read_state_value PREVIOUS_RUNTIME_CONFIG_DIGEST)"
   fi
   previous_image="$(read_pending_value PREVIOUS_APPLICATION_IMAGE)"
   previous_digest="$(read_pending_value PREVIOUS_RUNTIME_CONFIG_DIGEST)"
@@ -693,12 +892,6 @@ recover_pending_transaction() {
     fail "runtime config pending state values are invalid"
   fi
 
-  state_image="$(read_state_value APPLICATION_IMAGE)"
-  state_digest="$(read_state_value RUNTIME_CONFIG_DIGEST)"
-  state_compose_sha="$(read_state_value RUNTIME_CONFIG_COMPOSE_SHA256)"
-  state_previous_image="$(read_state_value PREVIOUS_APPLICATION_IMAGE)"
-  state_previous_digest="$(read_state_value PREVIOUS_RUNTIME_CONFIG_DIGEST)"
-
   if [[ "${state_image}" == "${target_image}" && "${state_digest}" == "${target_digest}" ]]; then
     if [[ "${previous_image}" != "${target_image}" ]] \
       || [[ "${previous_digest}" != "${target_digest}" ]]
@@ -710,7 +903,7 @@ recover_pending_transaction() {
       fi
     fi
     recovery_release="$(
-      validate_verified_release "${target_digest}" "${state_compose_sha}"
+      validate_verified_release "${target_digest}" "${state_content_sha}" "${state_shape}"
     )"
     if [[ "$(read_env_value PORTFOLIO_IMAGE)" != "${target_image}" ]]; then
       fail "application image environment does not match completed target state"
@@ -751,6 +944,7 @@ print(entry.get("Health", ""))
     then
       replace_current_link "${recovery_release}"
     fi
+    write_initialization_marker
     /bin/rm -f -- "${RUNTIME_CONFIG_PENDING}"
     printf 'Completed Portfolio runtime config transaction finalized: %s\n' "${target_image}"
     return 0
@@ -779,7 +973,7 @@ print(entry.get("Health", ""))
       fail "pending transaction does not match the last verified runtime config state"
     fi
     recovery_release="$(
-      validate_verified_release "${previous_digest}" "${state_compose_sha}"
+      validate_verified_release "${previous_digest}" "${state_content_sha}" "${state_shape}"
     )"
     recovery_compose="${recovery_release}/compose.yaml"
   fi
@@ -797,6 +991,13 @@ print(entry.get("Health", ""))
     fail "runtime config recovery could not restore the previous verified pair"
   fi
 
+  if [[ -n "${state_image}" ]]; then
+    expected_current="releases/$("/usr/bin/basename" "${recovery_release}")"
+    if [[ "$(/usr/bin/readlink "${RUNTIME_CONFIG_CURRENT}")" != "${expected_current}" ]]; then
+      replace_current_link "${recovery_release}"
+    fi
+    write_initialization_marker
+  fi
   /bin/rm -f -- "${RUNTIME_CONFIG_PENDING}"
   printf 'Portfolio runtime config transaction recovered to: %s\n' "${previous_image}"
 }
@@ -804,6 +1005,10 @@ print(entry.get("Health", ""))
 if [[ "${recovery_mode}" == true ]]; then
   recover_pending_transaction
   exit 0
+fi
+
+if [[ "${marker_migration_required}" == true ]]; then
+  migrate_initialization_marker
 fi
 
 new_image="${IMAGE_REPOSITORY}@${image_digest}"
@@ -838,10 +1043,11 @@ else
     fail "application image revision label does not match deployment revision"
   fi
 
-  current_config_digest="$(read_state_value RUNTIME_CONFIG_DIGEST)"
-  current_config_revision="$(read_state_value RUNTIME_CONFIG_REVISION)"
-  current_config_compose_sha256="$(read_state_value RUNTIME_CONFIG_COMPOSE_SHA256)"
-  current_state_image="$(read_state_value APPLICATION_IMAGE)"
+  current_config_digest=
+  current_config_revision=
+  current_config_content_sha256=
+  current_state_image=
+  current_config_shape=
 
   if [[ ! -e "${RUNTIME_CONFIG_STATE}" && ! -L "${RUNTIME_CONFIG_STATE}" ]] \
     && [[ -e "${RUNTIME_CONFIG_CURRENT}" || -L "${RUNTIME_CONFIG_CURRENT}" ]]
@@ -851,10 +1057,15 @@ else
 
   if [[ -e "${RUNTIME_CONFIG_STATE}" || -L "${RUNTIME_CONFIG_STATE}" ]]; then
     validate_state_file
+    current_config_digest="$(read_state_value RUNTIME_CONFIG_DIGEST)"
+    current_config_revision="$(read_state_value RUNTIME_CONFIG_REVISION)"
+    current_config_content_sha256="$(read_state_value "$(state_hash_key)")"
+    current_state_image="$(read_state_value APPLICATION_IMAGE)"
+    current_config_shape="$(state_expected_release_shape)"
     if [[ ! -f "${RUNTIME_CONFIG_STATE}" || -L "${RUNTIME_CONFIG_STATE}" ]] \
       || ! is_digest "${current_config_digest}" \
       || [[ ! "${current_config_revision}" =~ ^[0-9a-f]{40}$ ]] \
-      || [[ ! "${current_config_compose_sha256}" =~ ^[0-9a-f]{64}$ ]] \
+      || [[ ! "${current_config_content_sha256}" =~ ^[0-9a-f]{64}$ ]] \
       || ! is_approved_image "${current_state_image}" \
       || [[ "${current_state_image}" != "${current_image}" ]]
     then
@@ -864,8 +1075,8 @@ else
     if [[ ! -d "${current_release}" ]]; then
       fail "current runtime config release is missing"
     fi
-    validate_release_files "${current_release}"
-    if [[ "$(compose_sha256 "${current_release}/compose.yaml")" != "${current_config_compose_sha256}" ]]; then
+    validate_release "${current_release}" "${current_config_shape}" >/dev/null
+    if [[ "$(runtime_config_content_sha256 "${current_release}")" != "${current_config_content_sha256}" ]]; then
       fail "current runtime config release integrity check failed"
     fi
   else
@@ -877,17 +1088,20 @@ else
     candidate_config_revision="${revision}"
     prepare_runtime_release "${config_digest}" "${revision}"
     candidate_release="${prepared_release}"
-    candidate_config_compose_sha256="$(
-      compose_sha256 "${candidate_release}/compose.yaml"
+    candidate_config_content_sha256="$(
+      runtime_config_content_sha256 "${candidate_release}"
     )"
   else
     if [[ -z "${current_release}" ]]; then
       fail "keep mode requires an existing verified runtime config state"
     fi
+    if [[ "${current_config_shape}" != synced ]]; then
+      fail "keep mode requires a script-enabled runtime config release"
+    fi
     candidate_config_digest="${current_config_digest}"
     candidate_config_revision="${current_config_revision}"
     candidate_release="${current_release}"
-    candidate_config_compose_sha256="${current_config_compose_sha256}"
+    candidate_config_content_sha256="${current_config_content_sha256}"
   fi
 
   candidate_compose="${candidate_release}/compose.yaml"
@@ -932,7 +1146,7 @@ then
       "${previous_image}" \
       "${previous_config_digest}" \
       "${candidate_release}" \
-      "${candidate_config_compose_sha256}"
+      "${candidate_config_content_sha256}"
   fi
   printf 'Portfolio deployment succeeded: %s\n' "${new_image}"
   exit 0
