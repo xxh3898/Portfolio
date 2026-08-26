@@ -24,6 +24,8 @@ services:
       timeout: 5s
       start_period: 5s
       retries: 3
+    labels:
+      homeops.logs: "true"
     logging:
       driver: json-file
       options:
